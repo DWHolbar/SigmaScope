@@ -1,0 +1,11 @@
+{
+  "updatedAt": "2024-09-15",
+  "source": "clientdiversity.org (illustrative snapshot)",
+  "clients": [
+    { "name": "Lighthouse", "share": 38.4, "language": "Rust", "team": "Sigma Prime" },
+    { "name": "Prysm", "share": 31.7, "language": "Go", "team": "Offchain Labs" },
+    { "name": "Teku", "share": 16.2, "language": "Java", "team": "Consensys" },
+    { "name": "Nimbus", "share": 8.1, "language": "Nim", "team": "Status" },
+    { "name": "Lodestar", "share": 5.6, "language": "TypeScript", "team": "ChainSafe" }
+  ]
+}

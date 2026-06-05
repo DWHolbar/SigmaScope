@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #09090b;
+  --bg-elev: #111114;
+  --border: #27272a;
+  --text: #fafafa;
+  --text-muted: #a1a1aa;
+  --accent: #22d3ee;
+  --accent-soft: rgba(34, 211, 238, 0.12);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-image:
+    radial-gradient(60% 50% at 50% 0%, rgba(34, 211, 238, 0.08), transparent 70%),
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: auto, 36px 36px, 36px 36px;
+  background-position: top center, 0 0, 0 0;
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+.mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-feature-settings: "tnum" 1, "ss01" 1;
+}
+
+.card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.card-hover:hover {
+  border-color: rgba(34, 211, 238, 0.4);
+  transition: border-color 120ms ease;
+}
+
+.glow-accent {
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.2), 0 8px 32px -8px rgba(34, 211, 238, 0.25);
+}
+
+::selection {
+  background: rgba(34, 211, 238, 0.35);
+}
+
+.scroll-hide::-webkit-scrollbar {
+  display: none;
+}

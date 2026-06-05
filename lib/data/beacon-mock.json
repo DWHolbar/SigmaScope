@@ -1,0 +1,31 @@
+{
+  "epoch": {
+    "epoch": 348012,
+    "finalized": true,
+    "globalparticipationrate": 0.9947,
+    "votedether": 33240000,
+    "totalvalidatorbalance": 33420000,
+    "validatorscount": 1043871,
+    "ts": "2024-09-15T12:00:00Z"
+  },
+  "slot": {
+    "slot": 11136384,
+    "epoch": 348012,
+    "blockroot": "0xabc123…mock",
+    "proposer": 718394,
+    "status": "1",
+    "ts": "2024-09-15T12:00:00Z"
+  },
+  "participationHistory": [
+    { "epoch": 348003, "rate": 0.9931 },
+    { "epoch": 348004, "rate": 0.9942 },
+    { "epoch": 348005, "rate": 0.9938 },
+    { "epoch": 348006, "rate": 0.995 },
+    { "epoch": 348007, "rate": 0.9946 },
+    { "epoch": 348008, "rate": 0.9939 },
+    { "epoch": 348009, "rate": 0.9952 },
+    { "epoch": 348010, "rate": 0.9949 },
+    { "epoch": 348011, "rate": 0.9944 },
+    { "epoch": 348012, "rate": 0.9947 }
+  ]
+}

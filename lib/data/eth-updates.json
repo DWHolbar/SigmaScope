@@ -1,0 +1,50 @@
+{
+  "lighthouseConcepts": [
+    {
+      "title": "Slot",
+      "value": "12s",
+      "blurb": "A single chance for a validator to propose a block. Lighthouse processes them as fast as the network can deliver attestations."
+    },
+    {
+      "title": "Epoch",
+      "value": "32 slots",
+      "blurb": "≈ 6.4 minutes. Finality is two epochs of justification — Lighthouse tracks justification and finalization independently for safety."
+    },
+    {
+      "title": "Validator Participation",
+      "value": ">99% target",
+      "blurb": "Share of active validators whose attestations were included on time. A dip is the first signal of consensus stress."
+    },
+    {
+      "title": "Attestation Aggregation",
+      "value": "BLS sigs",
+      "blurb": "Lighthouse aggregates BLS signatures per committee — the linchpin that lets Ethereum scale to ~1M validators."
+    }
+  ],
+  "updates": [
+    {
+      "title": "Pectra hard fork",
+      "category": "Network upgrade",
+      "summary": "Combines Prague (EL) and Electra (CL). Bumps MAX_EFFECTIVE_BALANCE from 32 → 2048 ETH (EIP-7251) and adds smart-account EOA upgrades (EIP-7702).",
+      "href": "https://eips.ethereum.org/EIPS/eip-7251"
+    },
+    {
+      "title": "EIP-7702 — set EOA code",
+      "category": "Account abstraction",
+      "summary": "Lets externally-owned accounts temporarily run contract code for a single tx. Reduces UX friction without requiring full ERC-4337 migration.",
+      "href": "https://eips.ethereum.org/EIPS/eip-7702"
+    },
+    {
+      "title": "Blob throughput tuning",
+      "category": "Data availability",
+      "summary": "Post-Dencun blob target / max are being re-evaluated to balance L2 fee compression against historical-state burden on full nodes.",
+      "href": "https://eips.ethereum.org/EIPS/eip-7691"
+    },
+    {
+      "title": "Verkle / PeerDAS research",
+      "category": "Long-horizon",
+      "summary": "Statelessness via Verkle trees and data-availability sampling via PeerDAS — both shape what consensus clients like Lighthouse will look like in 2026+.",
+      "href": "https://ethereum.org/en/roadmap/verkle-trees/"
+    }
+  ]
+}
