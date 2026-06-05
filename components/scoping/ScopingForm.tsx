@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useReducer } from "react";
+import { useEffect, useMemo, useReducer, useRef } from "react";
 import {
   Coins,
   Image as ImageIcon,
@@ -9,6 +9,7 @@ import {
   GitBranch,
   Download,
   RotateCcw,
+  ArrowDown,
   type LucideIcon,
 } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/Card";
@@ -32,7 +33,6 @@ const TYPE_ICONS: Record<ProtocolType, LucideIcon> = {
 };
 
 type State = {
-  step: 0 | 1 | 2 | 3 | 4;
   type: ProtocolType | null;
   stack: StackLang | null;
   loc: LocBucket | null;
@@ -48,12 +48,9 @@ type Action =
   | { kind: "toggleIntegration"; v: string }
   | { kind: "upgradeable"; v: boolean }
   | { kind: "urgency"; v: Urgency }
-  | { kind: "next" }
-  | { kind: "back" }
   | { kind: "reset" };
 
 const initial: State = {
-  step: 0,
   type: null,
   stack: null,
   loc: null,
@@ -65,9 +62,9 @@ const initial: State = {
 function reducer(s: State, a: Action): State {
   switch (a.kind) {
     case "type":
-      return { ...s, type: a.v, step: 1 };
+      return { ...s, type: a.v };
     case "stack":
-      return { ...s, stack: a.v, step: 2 };
+      return { ...s, stack: a.v };
     case "loc":
       return { ...s, loc: a.v };
     case "toggleIntegration":
@@ -80,31 +77,48 @@ function reducer(s: State, a: Action): State {
     case "upgradeable":
       return { ...s, upgradeable: a.v };
     case "urgency":
-      return { ...s, urgency: a.v, step: 4 };
-    case "next":
-      return { ...s, step: Math.min(4, s.step + 1) as State["step"] };
-    case "back":
-      return { ...s, step: Math.max(0, s.step - 1) as State["step"] };
+      return { ...s, urgency: a.v };
     case "reset":
       return initial;
   }
 }
 
-const INTEGRATIONS = ["Oracle", "Cross-chain messaging", "Governance", "ERC-4626 vault", "Permit/EIP-2612"];
+const INTEGRATIONS = [
+  "Oracle",
+  "Cross-chain messaging",
+  "Governance",
+  "ERC-4626 vault",
+  "Permit/EIP-2612",
+];
 const LOC_OPTIONS: { v: LocBucket; label: string; hint: string }[] = [
-  { v: "<1k", label: "<1k LOC", hint: "Single contract, focused review" },
-  { v: "1-5k", label: "1–5k LOC", hint: "Small protocol or module" },
-  { v: "5-15k", label: "5–15k LOC", hint: "Full protocol surface" },
+  { v: "<1k", label: "<1k LOC", hint: "Single contract" },
+  { v: "1-5k", label: "1–5k LOC", hint: "Small protocol" },
+  { v: "5-15k", label: "5–15k LOC", hint: "Full protocol" },
   { v: ">15k", label: ">15k LOC", hint: "Phased engagement" },
 ];
 
+function progress(s: State): number {
+  let p = 0;
+  if (s.type) p++;
+  if (s.stack) p++;
+  if (s.loc) p++;
+  if (s.upgradeable !== null) p++;
+  if (s.urgency) p++;
+  return p;
+}
+
 export function ScopingForm() {
   const [s, dispatch] = useReducer(reducer, initial);
+  const outputRef = useRef<HTMLDivElement>(null);
 
-  const ready = s.type && s.stack && s.loc && s.upgradeable !== null && s.urgency;
+  const ready =
+    !!s.type && !!s.stack && !!s.loc && s.upgradeable !== null && !!s.urgency;
+  const totalSteps = 5;
+  const done = progress(s);
 
   const result = useMemo(() => {
-    if (!ready || !s.type || !s.stack || !s.loc || s.upgradeable === null || !s.urgency) return null;
+    if (!ready || !s.type || !s.stack || !s.loc || s.upgradeable === null || !s.urgency)
+      return null;
     const threats = threatsFor(s.type, s.stack);
     const proposal = buildProposal(
       {
@@ -119,6 +133,14 @@ export function ScopingForm() {
     );
     return { threats, proposal };
   }, [ready, s]);
+
+  // Scroll to output on small screens once everything is filled in
+  useEffect(() => {
+    if (!ready) return;
+    if (typeof window === "undefined") return;
+    if (window.innerWidth >= 1024) return;
+    outputRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [ready]);
 
   function download() {
     if (!result || !s.type || !s.stack || !s.loc || s.upgradeable === null || !s.urgency) return;
@@ -149,7 +171,7 @@ export function ScopingForm() {
         <Card>
           <CardHeader
             title="Tell us about the protocol"
-            hint="Four quick steps. The output is a Threat Model and a mock engagement outline."
+            hint={`${done} of ${totalSteps} inputs complete · output appears once all are filled.`}
             right={
               <button
                 onClick={() => dispatch({ kind: "reset" })}
@@ -160,10 +182,10 @@ export function ScopingForm() {
             }
           />
 
-          <Stepper step={s.step} />
+          <Stepper done={done} total={totalSteps} />
 
           <div className="mt-6 flex flex-col gap-6">
-            <Step n={1} title="Protocol type">
+            <Step n={1} title="Protocol type" filled={!!s.type}>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {PROTOCOL_TYPES.map((t) => {
                   const Icon = TYPE_ICONS[t];
@@ -188,90 +210,113 @@ export function ScopingForm() {
               </div>
             </Step>
 
-            <Step n={2} title="Primary stack" disabled={!s.type}>
+            <Step n={2} title="Primary stack" filled={!!s.stack}>
               <div className="flex flex-wrap gap-2">
                 {STACK_LANGS.map((l) => (
-                  <Pill key={l} active={s.stack === l} onClick={() => dispatch({ kind: "stack", v: l })}>
+                  <Pill
+                    key={l}
+                    active={s.stack === l}
+                    onClick={() => dispatch({ kind: "stack", v: l })}
+                  >
                     {l}
                   </Pill>
                 ))}
               </div>
             </Step>
 
-            <Step n={3} title="Scope" disabled={!s.stack}>
-              <div className="flex flex-col gap-4">
-                <div>
-                  <div className="mb-2 text-xs text-zinc-500">Codebase size</div>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {LOC_OPTIONS.map((o) => (
-                      <button
-                        key={o.v}
-                        onClick={() => dispatch({ kind: "loc", v: o.v })}
-                        className={`rounded-lg border p-3 text-left ${
-                          s.loc === o.v
-                            ? "border-accent/40 bg-accent/10"
-                            : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700"
-                        }`}
-                      >
-                        <div className={`text-sm ${s.loc === o.v ? "text-accent" : "text-zinc-100"}`}>
-                          {o.label}
-                        </div>
-                        <div className="mt-1 text-[11px] text-zinc-500">{o.hint}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div className="mb-2 text-xs text-zinc-500">External integrations</div>
-                  <div className="flex flex-wrap gap-2">
-                    {INTEGRATIONS.map((i) => (
-                      <Pill
-                        key={i}
-                        active={s.integrations.includes(i)}
-                        onClick={() => dispatch({ kind: "toggleIntegration", v: i })}
-                      >
-                        {i}
-                      </Pill>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div className="mb-2 text-xs text-zinc-500">Upgradeable contracts?</div>
-                  <div className="flex gap-2">
-                    <Pill
-                      active={s.upgradeable === true}
-                      onClick={() => dispatch({ kind: "upgradeable", v: true })}
+            <Step n={3} title="Codebase size" filled={!!s.loc}>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {LOC_OPTIONS.map((o) => (
+                  <button
+                    key={o.v}
+                    onClick={() => dispatch({ kind: "loc", v: o.v })}
+                    className={`rounded-lg border p-3 text-left ${
+                      s.loc === o.v
+                        ? "border-accent/40 bg-accent/10"
+                        : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700"
+                    }`}
+                  >
+                    <div
+                      className={`text-sm ${s.loc === o.v ? "text-accent" : "text-zinc-100"}`}
                     >
-                      Yes
-                    </Pill>
+                      {o.label}
+                    </div>
+                    <div className="mt-1 text-[11px] text-zinc-500">{o.hint}</div>
+                  </button>
+                ))}
+              </div>
+              <div className="mt-4">
+                <div className="mb-2 text-xs text-zinc-500">
+                  External integrations (optional, multi-select)
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {INTEGRATIONS.map((i) => (
                     <Pill
-                      active={s.upgradeable === false}
-                      onClick={() => dispatch({ kind: "upgradeable", v: false })}
+                      key={i}
+                      active={s.integrations.includes(i)}
+                      onClick={() => dispatch({ kind: "toggleIntegration", v: i })}
                     >
-                      No
+                      {i}
                     </Pill>
-                  </div>
+                  ))}
                 </div>
               </div>
             </Step>
 
-            <Step n={4} title="Timeline" disabled={!s.loc || s.upgradeable === null}>
+            <Step n={4} title="Upgradeable contracts?" filled={s.upgradeable !== null}>
               <div className="flex gap-2">
-                <Pill active={s.urgency === "Standard"} onClick={() => dispatch({ kind: "urgency", v: "Standard" })}>
+                <Pill
+                  active={s.upgradeable === true}
+                  onClick={() => dispatch({ kind: "upgradeable", v: true })}
+                >
+                  Yes
+                </Pill>
+                <Pill
+                  active={s.upgradeable === false}
+                  onClick={() => dispatch({ kind: "upgradeable", v: false })}
+                >
+                  No
+                </Pill>
+              </div>
+            </Step>
+
+            <Step n={5} title="Timeline" filled={!!s.urgency}>
+              <div className="flex gap-2">
+                <Pill
+                  active={s.urgency === "Standard"}
+                  onClick={() => dispatch({ kind: "urgency", v: "Standard" })}
+                >
                   Standard
                 </Pill>
-                <Pill active={s.urgency === "Expedited"} onClick={() => dispatch({ kind: "urgency", v: "Expedited" })}>
+                <Pill
+                  active={s.urgency === "Expedited"}
+                  onClick={() => dispatch({ kind: "urgency", v: "Expedited" })}
+                >
                   Expedited
                 </Pill>
               </div>
             </Step>
+
+            {!ready && (
+              <div className="rounded-md border border-dashed border-zinc-800 bg-zinc-900/30 p-3 text-[12px] text-zinc-500">
+                Fill all {totalSteps} inputs above. Output renders automatically — no submit button
+                needed.
+              </div>
+            )}
+
+            {ready && (
+              <div className="flex items-center justify-between rounded-md border border-accent/30 bg-accent/5 p-3 text-[12px] text-accent lg:hidden">
+                <span>Proposal ready below.</span>
+                <ArrowDown size={14} />
+              </div>
+            )}
           </div>
         </Card>
       </div>
 
-      <div className="lg:col-span-2">
+      <div className="lg:col-span-2" ref={outputRef}>
         {result ? (
-          <Card className="sticky top-20">
+          <Card className="lg:sticky lg:top-20">
             <CardHeader
               title="Threat model & engagement outline"
               hint="Generated from your inputs. Illustrative — not a binding quote."
@@ -363,10 +408,10 @@ export function ScopingForm() {
             )}
           </Card>
         ) : (
-          <Card className="sticky top-20 border-dashed">
+          <Card className="lg:sticky lg:top-20 border-dashed">
             <CardHeader
-              title="Output will appear here"
-              hint="Complete the four steps to generate a threat model and engagement outline."
+              title="Output preview"
+              hint={`${done}/${totalSteps} inputs filled. Output renders automatically once all are set.`}
             />
             <div className="grid h-64 place-items-center text-center text-sm text-zinc-500">
               <div className="flex flex-col items-center gap-2">
@@ -384,35 +429,41 @@ export function ScopingForm() {
 function Step({
   n,
   title,
+  filled,
   children,
-  disabled,
 }: {
   n: number;
   title: string;
+  filled: boolean;
   children: React.ReactNode;
-  disabled?: boolean;
 }) {
   return (
-    <div className={disabled ? "opacity-40" : ""}>
+    <div>
       <div className="mb-2 flex items-center gap-2">
-        <span className="grid h-5 w-5 place-items-center rounded-full border border-zinc-700 text-[10px] text-zinc-400">
-          {n}
+        <span
+          className={`grid h-5 w-5 place-items-center rounded-full border text-[10px] transition ${
+            filled
+              ? "border-accent bg-accent/20 text-accent"
+              : "border-zinc-700 text-zinc-400"
+          }`}
+        >
+          {filled ? "✓" : n}
         </span>
         <span className="text-xs uppercase tracking-widest text-zinc-400">{title}</span>
       </div>
-      <fieldset disabled={disabled}>{children}</fieldset>
+      {children}
     </div>
   );
 }
 
-function Stepper({ step }: { step: number }) {
+function Stepper({ done, total }: { done: number; total: number }) {
   return (
     <div className="flex gap-1">
-      {[0, 1, 2, 3].map((i) => (
+      {Array.from({ length: total }).map((_, i) => (
         <div
           key={i}
-          className={`h-1 flex-1 rounded-full ${
-            i <= step ? "bg-accent" : "bg-zinc-800"
+          className={`h-1 flex-1 rounded-full transition-colors ${
+            i < done ? "bg-accent" : "bg-zinc-800"
           }`}
         />
       ))}

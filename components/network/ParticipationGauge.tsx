@@ -5,13 +5,15 @@ import { LineChart, Line, ResponsiveContainer, YAxis, Tooltip } from "recharts";
 export function ParticipationGauge({
   rate,
   history,
+  apiOk,
 }: {
   rate: number;
   history: { epoch: number; rate: number }[];
+  apiOk: boolean;
 }) {
   const pct = (rate * 100).toFixed(2);
-  const min = Math.min(...history.map((h) => h.rate)) - 0.001;
-  const max = Math.max(...history.map((h) => h.rate)) + 0.001;
+  const min = history.length ? Math.min(...history.map((h) => h.rate)) - 0.001 : rate - 0.01;
+  const max = history.length ? Math.max(...history.map((h) => h.rate)) + 0.001 : rate + 0.01;
 
   return (
     <div className="flex flex-col gap-3">
@@ -24,7 +26,9 @@ export function ParticipationGauge({
         </div>
         <div className="text-right">
           <div className="mono text-xs text-emerald-400">healthy ≥ 99.0%</div>
-          <div className="mono text-[10px] text-zinc-500">target 100%</div>
+          <div className="mono text-[10px] text-zinc-500">
+            {apiOk ? "beaconcha.in" : "estimate"}
+          </div>
         </div>
       </div>
       <div className="h-20">

@@ -2,10 +2,11 @@ import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ClientDiversityChart } from "@/components/network/ClientDiversityChart";
 import { ParticipationGauge } from "@/components/network/ParticipationGauge";
-import { EpochSlotCard } from "@/components/network/EpochSlotCard";
+import { LiveSlotTicker } from "@/components/network/LiveSlotTicker";
 import { LighthouseHighlights } from "@/components/network/LighthouseHighlights";
 import { UpdatesFeed } from "@/components/network/UpdatesFeed";
 import { getBeaconSnapshot } from "@/lib/beacon";
+import { Info } from "lucide-react";
 
 export const revalidate = 30;
 
@@ -16,7 +17,7 @@ export default async function NetworkPulsePage() {
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <Badge tone="accent">Tab · Network Pulse</Badge>
+          <Badge tone="accent">Tab 1 · Network Pulse</Badge>
           <Badge tone="muted">Sigma Prime · Lighthouse</Badge>
         </div>
         <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
@@ -27,15 +28,20 @@ export default async function NetworkPulsePage() {
           Account Manager walks a founder through before the first audit conversation. Lighthouse,
           Sigma Prime&rsquo;s Rust consensus client, is highlighted throughout.
         </p>
+        <HowToUse>
+          Slot and epoch tick forward live (computed from beacon-chain genesis, no API needed).
+          Participation and client diversity are sourced from public APIs / snapshots — hover
+          the badges to see the source.
+        </HowToUse>
       </header>
 
       <section>
-        <EpochSlotCard
-          epoch={snap.epoch.epoch}
-          slot={snap.slot.slot}
-          finalized={snap.epoch.finalized}
+        <LiveSlotTicker
+          initialSlot={snap.slot.slot}
+          initialEpoch={snap.epoch.epoch}
+          finalizedEpoch={snap.epoch.finalizedEpoch}
           activeValidators={snap.epoch.activeValidators}
-          source={snap.source}
+          apiOk={snap.apiOk}
         />
       </section>
 
@@ -48,6 +54,7 @@ export default async function NetworkPulsePage() {
           <ParticipationGauge
             rate={snap.epoch.participationRate}
             history={snap.participationHistory}
+            apiOk={snap.apiOk}
           />
         </Card>
 
@@ -79,6 +86,15 @@ export default async function NetworkPulsePage() {
           <UpdatesFeed />
         </Card>
       </section>
+    </div>
+  );
+}
+
+function HowToUse({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mt-2 flex items-start gap-2 rounded-md border border-accent/20 bg-accent/5 px-3 py-2 text-[12px] text-zinc-300">
+      <Info size={14} className="mt-0.5 shrink-0 text-accent" />
+      <span>{children}</span>
     </div>
   );
 }

@@ -1,12 +1,13 @@
 import { Badge } from "@/components/ui/Badge";
 import { VulnerabilityExplorer } from "@/components/intel/VulnerabilityExplorer";
+import { Info } from "lucide-react";
 
 export default function IntelPage() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <Badge tone="accent">Tab · Vulnerability Intel</Badge>
+          <Badge tone="accent">Tab 3 · Vulnerability Intel</Badge>
           <Badge tone="muted">Historical exploits · 2016–2023</Badge>
         </div>
         <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
@@ -17,6 +18,14 @@ export default function IntelPage() {
           translates between them. Each entry below carries all three framings — plus how the kind
           of review Sigma Prime sells would have caught it.
         </p>
+        <div className="mt-2 flex items-start gap-2 rounded-md border border-accent/20 bg-accent/5 px-3 py-2 text-[12px] text-zinc-300">
+          <Info size={14} className="mt-0.5 shrink-0 text-accent" />
+          <span>
+            Type to filter (try <span className="mono text-accent">bridge</span> or{" "}
+            <span className="mono text-accent">oracle</span>), or toggle the Category / Severity
+            chips. Click any card to open the full engineer / founder / TAM breakdown.
+          </span>
+        </div>
       </header>
       <VulnerabilityExplorer />
     </div>
