@@ -8,7 +8,7 @@
     {
       "title": "Epoch",
       "value": "32 slots",
-      "blurb": "≈ 6.4 minutes. Finality is two epochs of justification — Lighthouse tracks justification and finalization independently for safety."
+      "blurb": "≈ 6.4 minutes. Finality is two epochs of justification - Lighthouse tracks justification and finalization independently for safety."
     },
     {
       "title": "Validator Participation",
@@ -18,7 +18,7 @@
     {
       "title": "Attestation Aggregation",
       "value": "BLS sigs",
-      "blurb": "Lighthouse aggregates BLS signatures per committee — the linchpin that lets Ethereum scale to ~1M validators."
+      "blurb": "Lighthouse aggregates BLS signatures per committee - the linchpin that lets Ethereum scale to ~1M validators."
     }
   ],
   "updates": [
@@ -29,7 +29,7 @@
       "href": "https://eips.ethereum.org/EIPS/eip-7251"
     },
     {
-      "title": "EIP-7702 — set EOA code",
+      "title": "EIP-7702 - set EOA code",
       "category": "Account abstraction",
       "summary": "Lets externally-owned accounts temporarily run contract code for a single tx. Reduces UX friction without requiring full ERC-4337 migration.",
       "href": "https://eips.ethereum.org/EIPS/eip-7702"
@@ -43,7 +43,7 @@
     {
       "title": "Verkle / PeerDAS research",
       "category": "Long-horizon",
-      "summary": "Statelessness via Verkle trees and data-availability sampling via PeerDAS — both shape what consensus clients like Lighthouse will look like in 2026+.",
+      "summary": "Statelessness via Verkle trees and data-availability sampling via PeerDAS - both shape what consensus clients like Lighthouse will look like in 2026+.",
       "href": "https://ethereum.org/en/roadmap/verkle-trees/"
     }
   ]

@@ -1,50 +1,80 @@
 "use client";
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import diversity from "@/lib/data/client-diversity.json";
 
 const COLORS: Record<string, string> = {
   Lighthouse: "#22d3ee",
-  Prysm: "#52525b",
-  Teku: "#3f3f46",
-  Nimbus: "#27272a",
-  Lodestar: "#18181b",
+  Prysm: "#71717a",
+  Teku: "#52525b",
+  Nimbus: "#3f3f46",
+  Lodestar: "#27272a",
 };
 
+const SIZE = 200;
+const STROKE = 28;
+const RADIUS = (SIZE - STROKE) / 2;
+const CIRC = 2 * Math.PI * RADIUS;
+
 export function ClientDiversityChart() {
-  const data = diversity.clients.map((c) => ({ name: c.name, value: c.share }));
+  const total = diversity.clients.reduce((acc, c) => acc + c.share, 0);
+  let offset = 0;
+  const slices = diversity.clients.map((c) => {
+    const length = (c.share / total) * CIRC;
+    const slice = {
+      name: c.name,
+      color: COLORS[c.name] ?? "#3f3f46",
+      length,
+      offset,
+      share: c.share,
+    };
+    offset += length;
+    return slice;
+  });
+
   const lighthouse = diversity.clients.find((c) => c.name === "Lighthouse")!;
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div className="h-56">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="name"
-              innerRadius={56}
-              outerRadius={88}
-              paddingAngle={2}
-              stroke="#0a0a0a"
-              strokeWidth={2}
-            >
-              {data.map((d) => (
-                <Cell key={d.name} fill={COLORS[d.name] ?? "#3f3f46"} />
-              ))}
-            </Pie>
-            <Tooltip
-              contentStyle={{
-                background: "#0a0a0a",
-                border: "1px solid #27272a",
-                borderRadius: 8,
-                fontSize: 12,
-              }}
-              formatter={(v: number) => `${v.toFixed(1)}%`}
+      <div className="relative flex h-56 items-center justify-center">
+        <svg
+          width={SIZE}
+          height={SIZE}
+          viewBox={`0 0 ${SIZE} ${SIZE}`}
+          className="-rotate-90"
+          role="img"
+          aria-label="Consensus client diversity donut chart"
+        >
+          <circle
+            cx={SIZE / 2}
+            cy={SIZE / 2}
+            r={RADIUS}
+            fill="none"
+            stroke="#18181b"
+            strokeWidth={STROKE}
+          />
+          {slices.map((s) => (
+            <circle
+              key={s.name}
+              cx={SIZE / 2}
+              cy={SIZE / 2}
+              r={RADIUS}
+              fill="none"
+              stroke={s.color}
+              strokeWidth={STROKE}
+              strokeDasharray={`${s.length} ${CIRC - s.length}`}
+              strokeDashoffset={-s.offset}
+              className="transition-all"
             />
-          </PieChart>
-        </ResponsiveContainer>
+          ))}
+        </svg>
+        <div className="absolute flex flex-col items-center text-center">
+          <span className="mono text-2xl font-semibold text-accent">
+            {lighthouse.share.toFixed(1)}%
+          </span>
+          <span className="text-[10px] uppercase tracking-widest text-zinc-500">
+            Lighthouse
+          </span>
+        </div>
       </div>
       <div className="flex flex-col justify-center gap-2">
         <div className="mb-1 text-xs uppercase tracking-widest text-zinc-500">
@@ -73,7 +103,7 @@ export function ClientDiversityChart() {
           </div>
         ))}
         <p className="mt-1 text-[11px] text-zinc-500">
-          Lighthouse · {lighthouse.team}. Snapshot {diversity.updatedAt} · {diversity.source}.
+          Lighthouse, built by {lighthouse.team}. Snapshot {diversity.updatedAt}, {diversity.source}.
         </p>
       </div>
     </div>

@@ -24,13 +24,13 @@ export default async function NetworkPulsePage() {
           Ethereum consensus, in the language Sigma Prime built it in.
         </h1>
         <p className="max-w-3xl text-sm text-zinc-400">
-          Slots, epochs, validator participation, and client diversity — the primitives a Technical
+          Slots, epochs, validator participation, and client diversity - the primitives a Technical
           Account Manager walks a founder through before the first audit conversation. Lighthouse,
           Sigma Prime&rsquo;s Rust consensus client, is highlighted throughout.
         </p>
         <HowToUse>
           Slot and epoch tick forward live (computed from beacon-chain genesis, no API needed).
-          Participation and client diversity are sourced from public APIs / snapshots — hover
+          Participation and client diversity are sourced from public APIs / snapshots - hover
           the badges to see the source.
         </HowToUse>
       </header>

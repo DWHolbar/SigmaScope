@@ -19,7 +19,7 @@
     "severity": "Critical",
     "lossUsd": 280000000,
     "oneLiner": "Unprotected initWallet() let a user become the library owner, then selfdestruct it.",
-    "engineerExplain": "The shared wallet library exposed initWallet() with no initialization guard. A user called it, took ownership, then issued kill() — bricking every wallet that delegated to that library.",
+    "engineerExplain": "The shared wallet library exposed initWallet() with no initialization guard. A user called it, took ownership, then issued kill() - bricking every wallet that delegated to that library.",
     "founderImpact": "≈ 513k ETH permanently frozen across hundreds of treasuries. Demonstrated that 'shared library' is itself a trust assumption.",
     "sigmaPrimeMitigation": "Every initializer must be guarded (constructor-only, or initializer modifier with a one-shot bool). Audits explicitly enumerate library/proxy ownership paths and verify that selfdestruct surfaces are either removed or behind multi-sig timelocks."
   },
@@ -31,7 +31,7 @@
     "severity": "High",
     "lossUsd": 954000,
     "oneLiner": "Atomic loan → manipulated price → drained margin pool, all in one transaction.",
-    "engineerExplain": "Attacker borrowed via dYdX flash loan, manipulated the Uniswap v1 sUSD/ETH spot price (used as bZx's oracle), opened a short on the distorted price, and repaid the loan — pocketing the spread.",
+    "engineerExplain": "Attacker borrowed via dYdX flash loan, manipulated the Uniswap v1 sUSD/ETH spot price (used as bZx's oracle), opened a short on the distorted price, and repaid the loan - pocketing the spread.",
     "founderImpact": "First high-profile flash loan exploit. Changed how every DeFi protocol thinks about composability and oracle sourcing.",
     "sigmaPrimeMitigation": "We red-team oracle paths: spot DEX prices are never trusted for collateralization. Threat model surfaces TWAP windows, Chainlink feed deviation thresholds, and per-block trade caps."
   },
@@ -57,7 +57,7 @@
     "oneLiner": "Compromised Cloudflare account injected malicious approvals into the dApp UI.",
     "engineerExplain": "Not a contract bug. An attacker added a Cloudflare API key, injected JS that rewrote approve() targets in the dApp, and harvested signed approvals from users who connected wallets.",
     "founderImpact": "$120M lost; reminded the space that the smart-contract perimeter ends at the user's browser. Web2 hygiene is in scope.",
-    "sigmaPrimeMitigation": "Engagement scoping asks about CSP headers, subresource integrity, DNS/CDN account 2FA, and signer-display patterns (Permit2, blind-signing warnings) — the contracts are necessary but not sufficient."
+    "sigmaPrimeMitigation": "Engagement scoping asks about CSP headers, subresource integrity, DNS/CDN account 2FA, and signer-display patterns (Permit2, blind-signing warnings) - the contracts are necessary but not sufficient."
   },
   {
     "id": "ronin-2022",
@@ -68,7 +68,7 @@
     "lossUsd": 624000000,
     "oneLiner": "5-of-9 validator quorum collapsed to 5-of-5 after social-engineered key compromise.",
     "engineerExplain": "Attacker compromised 4 Sky Mavis validators directly and gained a delegated 5th via a stale RPC allowlist. With 5 keys, they signed two withdrawal transactions and emptied the bridge.",
-    "founderImpact": "$624M — the largest DeFi hack ever at the time. Triggered the rethink of how m-of-n bridge guardians are operated and rotated.",
+    "founderImpact": "$624M - the largest DeFi hack ever at the time. Triggered the rethink of how m-of-n bridge guardians are operated and rotated.",
     "sigmaPrimeMitigation": "Bridge engagements include key-custody and rotation review, not just contract review. We push for hardware-isolated signers, explicit timelock on validator-set changes, and revocation of all delegated RPC trust after engagement testing."
   },
   {
@@ -90,9 +90,9 @@
     "category": "Bridge",
     "severity": "Critical",
     "lossUsd": 190000000,
-    "oneLiner": "Upgrade set the trusted root to 0x00 — every message became 'valid'.",
+    "oneLiner": "Upgrade set the trusted root to 0x00 - every message became 'valid'.",
     "engineerExplain": "A routine Replica upgrade initialized the trusted root to zero. Because committedRoot[0] = true, any message whose Merkle proof hashed to zero was accepted. Within hours, a copy-paste exploit drained the bridge.",
-    "founderImpact": "$190M lost in a chaotic, public, copy-paste-able fashion — the first 'decentralized' hack where hundreds of EOAs participated.",
+    "founderImpact": "$190M lost in a chaotic, public, copy-paste-able fashion - the first 'decentralized' hack where hundreds of EOAs participated.",
     "sigmaPrimeMitigation": "Upgrade reviews are a distinct deliverable: initial storage layout deltas, default-value invariants, and a forced testnet replay of every privileged init path before the mainnet tx is signed."
   },
   {
@@ -104,8 +104,8 @@
     "lossUsd": 197000000,
     "oneLiner": "donateToReserves() let an attacker put themselves underwater and self-liquidate at a discount.",
     "engineerExplain": "donateToReserves bypassed the standard health check. Attacker leveraged into a position, donated enough to flip themselves underwater without triggering a revert, then captured the liquidation bonus as the same address.",
-    "founderImpact": "$197M (returned in full — rare). Validated that protocol-level invariants matter more than per-function correctness.",
-    "sigmaPrimeMitigation": "Invariant-based review (Echidna / Foundry) — we don't just check 'this function reverts on bad input', we assert 'no sequence of legal calls leaves an unhealthy account un-liquidatable by anyone except itself profitably.'"
+    "founderImpact": "$197M (returned in full - rare). Validated that protocol-level invariants matter more than per-function correctness.",
+    "sigmaPrimeMitigation": "Invariant-based review (Echidna / Foundry) - we don't just check 'this function reverts on bad input', we assert 'no sequence of legal calls leaves an unhealthy account un-liquidatable by anyone except itself profitably.'"
   },
   {
     "id": "compound-2023",
@@ -114,7 +114,7 @@
     "category": "Oracle Manipulation",
     "severity": "Medium",
     "lossUsd": 0,
-    "oneLiner": "Empty-market donation attack on ERC-4626 share price — disclosed responsibly, no loss.",
+    "oneLiner": "Empty-market donation attack on ERC-4626 share price - disclosed responsibly, no loss.",
     "engineerExplain": "On a freshly deployed empty market, an attacker can mint 1 wei of shares, donate a large amount of the underlying, then later depositors round-down to zero shares. Compound v3 markets were patched before exploitation.",
     "founderImpact": "Zero loss, but demonstrates why audit cadence and deployment runbooks (seed the market first, then open it) matter as much as the code.",
     "sigmaPrimeMitigation": "We include deployment-runbook review: vaults are seeded by the deployer with a dead-share before public access, or use the OpenZeppelin virtual-offset pattern. Caught at design time, not after launch."

@@ -16,7 +16,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SigmaScope — Web3 Security & Ecosystem Hub",
+  title: "SigmaScope - Web3 Security & Ecosystem Hub",
   description:
     "A TAM-oriented portal: Ethereum network pulse, audit scoping, and a smart-contract vulnerability archive.",
 };

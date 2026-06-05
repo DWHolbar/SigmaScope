@@ -67,7 +67,7 @@ const THREATS: Record<ProtocolType, Threat[]> = {
     {
       vector: "Oracle / message-passing trust path",
       category: "Oracle",
-      why: "For oracle networks and message routers, the end-to-end trust path — including off-chain signers — is the audit unit.",
+      why: "For oracle networks and message routers, the end-to-end trust path - including off-chain signers - is the audit unit.",
     },
     {
       vector: "Gas-griefing / DoS in critical paths",
@@ -94,7 +94,7 @@ const THREATS: Record<ProtocolType, Threat[]> = {
     {
       vector: "Upgrade key custody",
       category: "Access Control",
-      why: "Stage-0/1 rollups have privileged upgrade keys — custody, rotation, and timelocks are in scope.",
+      why: "Stage-0/1 rollups have privileged upgrade keys - custody, rotation, and timelocks are in scope.",
     },
   ],
   Bridge: [
@@ -111,7 +111,7 @@ const THREATS: Record<ProtocolType, Threat[]> = {
     {
       vector: "Replica root / message-root defaults",
       category: "Upgradeability",
-      why: "Nomad's zero-root catastrophe — every privileged init must have a non-zero invariant asserted on-chain.",
+      why: "Nomad's zero-root catastrophe - every privileged init must have a non-zero invariant asserted on-chain.",
     },
     {
       vector: "Asset-accounting drift across chains",

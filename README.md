@@ -5,14 +5,14 @@ A Web3 Security & Ecosystem Hub built as a TAM portfolio piece for Sigma Prime. 
 
 ## Three tabs
 
-1. **Network Pulse** — live Ethereum consensus stats (epoch, slot, validator participation, client
+1. **Network Pulse** - live Ethereum consensus stats (epoch, slot, validator participation, client
    diversity) with Lighthouse highlighted. Data via a server-side `/api/beacon` proxy to
    beaconcha.in, with a realistic mock fallback if the upstream is unavailable.
-2. **Audit Scoping Simulator** — four-step questionnaire (protocol type → stack → scope →
+2. **Audit Scoping Simulator** - four-step questionnaire (protocol type → stack → scope →
    timeline) that emits a threat-model summary, a mock engagement outline, and a downloadable
    Markdown proposal. Comparable-engagement line references real Sigma Prime clients (Chainlink,
    Dapper Labs, AlphaWallet).
-3. **Vulnerability Intel** — searchable archive of 10 historical smart-contract exploits, each
+3. **Vulnerability Intel** - searchable archive of 10 historical smart-contract exploits, each
    framed three ways: engineer (call trace), founder (business impact), TAM (how an audit catches
    it).
 
@@ -26,7 +26,7 @@ npm run dev
 
 ## Deploy
 
-Push to GitHub and import the repo on Vercel — zero config required.
+Push to GitHub and import the repo on Vercel - zero config required.
 
 ## Stack
 

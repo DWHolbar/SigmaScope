@@ -2,21 +2,21 @@
   {
     "name": "Chainlink",
     "protocolType": "Infrastructure",
-    "engagementHint": "CCIP / oracle network — multi-chain message routing and price feed integrity."
+    "engagementHint": "CCIP / oracle network - multi-chain message routing and price feed integrity."
   },
   {
     "name": "Dapper Labs",
     "protocolType": "NFT",
-    "engagementHint": "Flow blockchain & NFT issuance flows — large surface, consumer-facing rails."
+    "engagementHint": "Flow blockchain & NFT issuance flows - large surface, consumer-facing rails."
   },
   {
     "name": "AlphaWallet",
     "protocolType": "Infrastructure",
-    "engagementHint": "Self-custody wallet — key isolation, dApp signing surfaces, deeplink hygiene."
+    "engagementHint": "Self-custody wallet - key isolation, dApp signing surfaces, deeplink hygiene."
   },
   {
     "name": "Lunar Strategy",
     "protocolType": "DeFi",
-    "engagementHint": "Growth & marketing for DeFi protocols — operational/process scope, not contract review."
+    "engagementHint": "Growth & marketing for DeFi protocols - operational/process scope, not contract review."
   }
 ]

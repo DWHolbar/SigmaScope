@@ -92,8 +92,8 @@ const INTEGRATIONS = [
 ];
 const LOC_OPTIONS: { v: LocBucket; label: string; hint: string }[] = [
   { v: "<1k", label: "<1k LOC", hint: "Single contract" },
-  { v: "1-5k", label: "1–5k LOC", hint: "Small protocol" },
-  { v: "5-15k", label: "5–15k LOC", hint: "Full protocol" },
+  { v: "1-5k", label: "1 to 5k LOC", hint: "Small protocol" },
+  { v: "5-15k", label: "5 to 15k LOC", hint: "Full protocol" },
   { v: ">15k", label: ">15k LOC", hint: "Phased engagement" },
 ];
 
@@ -299,7 +299,7 @@ export function ScopingForm() {
 
             {!ready && (
               <div className="rounded-md border border-dashed border-zinc-800 bg-zinc-900/30 p-3 text-[12px] text-zinc-500">
-                Fill all {totalSteps} inputs above. Output renders automatically — no submit button
+                Fill all {totalSteps} inputs above. Output renders automatically - no submit button
                 needed.
               </div>
             )}
@@ -319,7 +319,7 @@ export function ScopingForm() {
           <Card className="lg:sticky lg:top-20">
             <CardHeader
               title="Threat model & engagement outline"
-              hint="Generated from your inputs. Illustrative — not a binding quote."
+              hint="Generated from your inputs. Numbers are illustrative estimates, not a Sigma Prime quote."
               right={
                 <Button variant="outline" onClick={download}>
                   <Download size={14} /> .md
@@ -354,7 +354,7 @@ export function ScopingForm() {
               <div className="grid grid-cols-2 gap-2">
                 <Stat
                   label="Duration"
-                  value={`${result.proposal.weeksLow}–${result.proposal.weeksHigh} weeks`}
+                  value={`${result.proposal.weeksLow} to ${result.proposal.weeksHigh} weeks`}
                 />
                 <Stat label="Team" value={`${result.proposal.team.length} reviewers`} />
               </div>
@@ -373,6 +373,13 @@ export function ScopingForm() {
                   </li>
                 ))}
               </ul>
+              <p className="mt-3 rounded-md border border-zinc-800 bg-zinc-900/40 p-2.5 text-[11px] leading-relaxed text-zinc-500">
+                <span className="font-medium text-zinc-300">How the week range is derived:</span>{" "}
+                a fixed LOC bucket map ({"<"}1k: 2 wks, 1 to 5k: 3 to 4 wks, 5 to 15k: 5 to 7 wks,
+                {" >"}15k: 8 to 12 wks), minus 1 week if Expedited. This is a public-domain heuristic,
+                not Sigma Prime pricing. Real engagements depend on code quality, test coverage,
+                design novelty, and prior team context.
+              </p>
             </section>
 
             {result.proposal.comparable && (
