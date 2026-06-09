@@ -22,7 +22,8 @@ import {
   StackLang,
   threatsFor,
 } from "@/lib/threat-models";
-import { buildProposal, proposalToMarkdown, LocBucket, Urgency } from "@/lib/proposal";
+import { buildProposal, LocBucket, Urgency } from "@/lib/proposal";
+import { generateProposalPdf } from "@/lib/pdf";
 
 const TYPE_ICONS: Record<ProtocolType, LucideIcon> = {
   DeFi: Coins,
@@ -144,7 +145,7 @@ export function ScopingForm() {
 
   function download() {
     if (!result || !s.type || !s.stack || !s.loc || s.upgradeable === null || !s.urgency) return;
-    const md = proposalToMarkdown(
+    const blob = generateProposalPdf(
       {
         type: s.type,
         stack: s.stack,
@@ -156,11 +157,10 @@ export function ScopingForm() {
       result.threats,
       result.proposal,
     );
-    const blob = new Blob([md], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `sigmascope-${s.type.toLowerCase().replace(/\s+/g, "-")}-proposal.md`;
+    a.download = `sigmascope-${s.type.toLowerCase().replace(/\s+/g, "-")}-proposal.pdf`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -322,7 +322,7 @@ export function ScopingForm() {
               hint="Generated from your inputs. Numbers are illustrative estimates, not a Sigma Prime quote."
               right={
                 <Button variant="outline" onClick={download}>
-                  <Download size={14} /> .md
+                  <Download size={14} /> PDF
                 </Button>
               }
             />
@@ -373,12 +373,76 @@ export function ScopingForm() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 rounded-md border border-zinc-800 bg-zinc-900/40 p-2.5 text-[11px] leading-relaxed text-zinc-500">
-                <span className="font-medium text-zinc-300">How the week range is derived:</span>{" "}
-                a fixed LOC bucket map ({"<"}1k: 2 wks, 1 to 5k: 3 to 4 wks, 5 to 15k: 5 to 7 wks,
-                {" >"}15k: 8 to 12 wks), minus 1 week if Expedited. This is a public-domain heuristic,
-                not Sigma Prime pricing. Real engagements depend on code quality, test coverage,
-                design novelty, and prior team context.
+            </section>
+
+            <section className="mb-5">
+              <div className="mb-2 text-[10px] uppercase tracking-widest text-zinc-500">
+                How the week range is derived
+              </div>
+              <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-3">
+                <div className="flex items-baseline justify-between border-b border-zinc-800 pb-2">
+                  <span className="text-[11px] font-medium text-zinc-300">
+                    Base ({s.loc} LOC, {result.proposal.calculation.base.label})
+                  </span>
+                  <span className="mono text-[11px] text-zinc-200">
+                    {result.proposal.calculation.base.low} to {result.proposal.calculation.base.high}{" "}
+                    wks
+                  </span>
+                </div>
+                {result.proposal.calculation.steps.length === 0 ? (
+                  <div className="pt-2 text-[11px] text-zinc-500">
+                    No modifiers apply for this combination.
+                  </div>
+                ) : (
+                  <ul className="flex flex-col">
+                    {result.proposal.calculation.steps.map((step) => (
+                      <li
+                        key={step.label}
+                        className="flex flex-col gap-0.5 border-b border-zinc-800/60 py-2 last:border-b-0"
+                      >
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span className="text-[11px] font-medium text-zinc-300">
+                            {step.label}
+                          </span>
+                          <span className="mono text-[11px] text-accent">{step.delta}</span>
+                        </div>
+                        <span className="text-[11px] leading-relaxed text-zinc-500">
+                          {step.rationale}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="mt-2 flex items-baseline justify-between border-t border-zinc-800 pt-2">
+                  <span className="text-[11px] font-semibold text-zinc-200">Total</span>
+                  <span className="mono text-[11px] font-semibold text-zinc-100">
+                    {result.proposal.weeksLow} to {result.proposal.weeksHigh} wks
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-5">
+              <div className="mb-2 text-[10px] uppercase tracking-widest text-zinc-500">
+                Indicative cost band
+              </div>
+              <div className="rounded-md border border-accent/30 bg-accent/5 p-3">
+                <div className="mono text-lg font-semibold text-accent">
+                  ${result.proposal.calculation.estTotalCostLow.toLocaleString()} to $
+                  {result.proposal.calculation.estTotalCostHigh.toLocaleString()}
+                </div>
+                <div className="mt-1 text-[11px] leading-relaxed text-zinc-400">
+                  {result.proposal.weeksLow} to {result.proposal.weeksHigh} wks
+                  &times; {result.proposal.calculation.teamSize} reviewers &times; $
+                  {result.proposal.calculation.weekRate.low.toLocaleString()} to $
+                  {result.proposal.calculation.weekRate.high.toLocaleString()} per engineer-week
+                  (industry-published range from Trail of Bits, ConsenSys Diligence, OpenZeppelin).
+                </div>
+              </div>
+              <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
+                This is an industry-anchored estimate, not Sigma Prime pricing. Sigma Prime does not
+                publish a rate card; only their team can give a binding quote. Treat these numbers
+                as a conversation starter.
               </p>
             </section>
 

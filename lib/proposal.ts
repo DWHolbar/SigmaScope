@@ -13,6 +13,12 @@ export type ScopingInputs = {
   urgency: Urgency;
 };
 
+export type CalcStep = {
+  label: string;
+  delta: string;
+  rationale: string;
+};
+
 export type Proposal = {
   weeksLow: number;
   weeksHigh: number;
@@ -20,14 +26,24 @@ export type Proposal = {
   deliverables: string[];
   comparable: { client: string; note: string } | null;
   caveats: string[];
+  calculation: {
+    base: { low: number; high: number; label: string };
+    steps: CalcStep[];
+    weekRate: { low: number; high: number };
+    teamSize: number;
+    estTotalCostLow: number;
+    estTotalCostHigh: number;
+  };
 };
 
-const WEEKS: Record<LocBucket, [number, number]> = {
-  "<1k": [2, 2],
-  "1-5k": [3, 4],
-  "5-15k": [5, 7],
-  ">15k": [8, 12],
+const WEEKS_BASE: Record<LocBucket, [number, number, string]> = {
+  "<1k": [2, 3, "single contract or focused module"],
+  "1-5k": [3, 5, "small protocol surface"],
+  "5-15k": [6, 9, "full protocol, multiple contracts"],
+  ">15k": [10, 14, "phased engagement, fix-review gate"],
 };
+
+const PER_ENGINEER_WEEK_RATE: [number, number] = [25_000, 50_000];
 
 function pickComparable(type: ProtocolType): Proposal["comparable"] {
   const match = (clients as { name: string; protocolType: string; engagementHint: string }[]).find(
@@ -41,86 +57,141 @@ function pickComparable(type: ProtocolType): Proposal["comparable"] {
 }
 
 export function buildProposal(inputs: ScopingInputs, threats: Threat[]): Proposal {
-  const [low, high] = WEEKS[inputs.loc];
+  const [baseLow, baseHigh, baseLabel] = WEEKS_BASE[inputs.loc];
+  const steps: CalcStep[] = [];
 
-  const expedited = inputs.urgency === "Expedited";
-  const weeksLow = expedited ? Math.max(2, low - 1) : low;
-  const weeksHigh = expedited ? Math.max(weeksLow, high - 1) : high;
+  let lo = baseLow;
+  let hi = baseHigh;
+
+  if (inputs.stack === "Rust" || inputs.stack === "Cairo") {
+    lo += 1;
+    hi += 2;
+    steps.push({
+      label: `${inputs.stack} stack`,
+      delta: "+1 to +2 wks",
+      rationale: `Non-Solidity stack: auditor warm-up, tooling allowance, fewer reusable Slither/Foundry harnesses.`,
+    });
+  } else if (inputs.stack === "Vyper") {
+    lo += 1;
+    hi += 1;
+    steps.push({
+      label: "Vyper stack",
+      delta: "+1 wk",
+      rationale: "Compiler-version pinning and reproducible-build verification add scope (Curve 2023 precedent).",
+    });
+  }
+
+  if (inputs.upgradeable) {
+    lo += 1;
+    hi += 1;
+    steps.push({
+      label: "Upgradeable contracts",
+      delta: "+1 wk",
+      rationale: "Storage-layout deltas and privileged-init invariants require a separate review pass (Nomad 2022 precedent).",
+    });
+  }
+
+  if (inputs.type === "Bridge" || inputs.integrations.includes("Cross-chain messaging")) {
+    lo += 2;
+    hi += 3;
+    steps.push({
+      label: "Cross-chain / bridge surface",
+      delta: "+2 to +3 wks",
+      rationale: "Multi-VM signature paths, guardian-set rotation, and asset-accounting fuzz suite.",
+    });
+  }
+
+  if (inputs.type === "Layer 2") {
+    lo += 2;
+    hi += 4;
+    steps.push({
+      label: "Layer 2 stack",
+      delta: "+2 to +4 wks",
+      rationale: "Proof-system soundness, sequencer-censorship paths, and force-inclusion exercises require a cryptographer.",
+    });
+  }
+
+  if (inputs.integrations.includes("Oracle")) {
+    lo += 1;
+    hi += 1;
+    steps.push({
+      label: "Oracle integration",
+      delta: "+1 wk",
+      rationale: "Map every price source end-to-end, TWAP windows, deviation thresholds, fallback handling.",
+    });
+  }
+
+  if (inputs.integrations.includes("Governance")) {
+    lo += 1;
+    hi += 1;
+    steps.push({
+      label: "Governance surface",
+      delta: "+1 wk",
+      rationale: "Flash-loan-funded voting attacks, proposal-execution timing (Beanstalk 2022 precedent).",
+    });
+  }
+
+  if (inputs.urgency === "Expedited") {
+    const dropLo = Math.min(2, Math.max(0, lo - baseLow));
+    const dropHi = Math.min(2, Math.max(0, hi - baseHigh));
+    lo = Math.max(baseLow, lo - dropLo);
+    hi = Math.max(lo, hi - dropHi);
+    steps.push({
+      label: "Expedited timeline",
+      delta: `-${dropLo} to -${dropHi} wks`,
+      rationale: "Parallel auditors compress calendar weeks; engineering-weeks remain similar, expect deeper findings to land late.",
+    });
+  }
 
   const team: string[] = ["Lead Auditor", "Senior Auditor"];
-  if (inputs.type === "Layer 2" || inputs.type === "Bridge") team.push("Cryptography Researcher");
+  if (inputs.type === "Layer 2" || inputs.type === "Bridge")
+    team.push("Cryptography Researcher");
   if (inputs.upgradeable) team.push("Upgrade-Path Reviewer");
   if (inputs.integrations.includes("Oracle")) team.push("Oracle Specialist");
+  if (inputs.urgency === "Expedited" && team.length < 4) team.push("Reviewer (parallel pass)");
 
   const deliverables = [
-    "Interim findings report (mid-engagement)",
-    "Final audit report with severity-classified findings",
-    "Fix-review pass on remediations",
+    "Interim findings report at the midpoint of the engagement",
+    "Final audit report with severity-classified findings (Critical, High, Medium, Low, Informational)",
+    "Fix-review pass on remediations submitted by the client",
     "Threat-model document covering: " + threats.map((t) => t.category).join(", "),
   ];
   if (inputs.upgradeable) {
     deliverables.push("Upgrade runbook review (storage layout + privileged-init invariants)");
   }
   if (inputs.type === "Bridge" || inputs.integrations.includes("Cross-chain messaging")) {
-    deliverables.push("Cross-chain invariant fuzz suite (Echidna / Foundry harness)");
+    deliverables.push("Cross-chain invariant fuzz suite (Echidna or Foundry harness)");
+  }
+  if (inputs.type === "Layer 2") {
+    deliverables.push("Force-inclusion and sequencer-censorship exercise log");
   }
 
   const caveats: string[] = [];
-  if (expedited) caveats.push("Expedited timelines reduce slack for deep invariant work; scope cuts may be needed.");
-  if (inputs.loc === ">15k") caveats.push(">15k LOC engagements are typically split into two phases with a fix-review gate.");
+  if (inputs.urgency === "Expedited")
+    caveats.push("Expedited timelines reduce slack for deep invariant work; deeper findings may land late or roll into a follow-up engagement.");
+  if (inputs.loc === ">15k")
+    caveats.push("Codebases over 15k LOC are typically split into two phases with a fix-review gate between.");
   if (inputs.stack === "Cairo" || inputs.stack === "Rust")
-    caveats.push("Non-Solidity stacks require auditor warm-up and tooling allowance in week 1.");
+    caveats.push("Non-Solidity stacks require an auditor warm-up week and may have a smaller pool of qualified reviewers.");
+
+  const teamSize = team.length;
+  const estTotalCostLow = lo * teamSize * PER_ENGINEER_WEEK_RATE[0];
+  const estTotalCostHigh = hi * teamSize * PER_ENGINEER_WEEK_RATE[1];
 
   return {
-    weeksLow,
-    weeksHigh,
+    weeksLow: lo,
+    weeksHigh: hi,
     team,
     deliverables,
     comparable: pickComparable(inputs.type),
     caveats,
+    calculation: {
+      base: { low: baseLow, high: baseHigh, label: baseLabel },
+      steps,
+      weekRate: { low: PER_ENGINEER_WEEK_RATE[0], high: PER_ENGINEER_WEEK_RATE[1] },
+      teamSize,
+      estTotalCostLow,
+      estTotalCostHigh,
+    },
   };
-}
-
-export function proposalToMarkdown(
-  inputs: ScopingInputs,
-  threats: Threat[],
-  proposal: Proposal,
-): string {
-  return [
-    `# Audit Scoping Proposal - Sigma Prime (mock)`,
-    ``,
-    `**Protocol type:** ${inputs.type}`,
-    `**Primary stack:** ${inputs.stack}`,
-    `**Codebase size:** ${inputs.loc} LOC`,
-    `**Upgradeable:** ${inputs.upgradeable ? "Yes" : "No"}`,
-    `**External integrations:** ${inputs.integrations.length ? inputs.integrations.join(", ") : "None declared"}`,
-    `**Urgency:** ${inputs.urgency}`,
-    ``,
-    `## Threat Model Summary`,
-    ...threats.map((t) => `- **${t.vector}** _(${t.category})_ - ${t.why}`),
-    ``,
-    `## Engagement Outline`,
-    `- **Duration:** ${proposal.weeksLow} to ${proposal.weeksHigh} weeks (illustrative estimate)`,
-    `- **Team:** ${proposal.team.join(", ")}`,
-    `- **Deliverables:**`,
-    ...proposal.deliverables.map((d) => ` - ${d}`),
-    proposal.comparable
-      ? `\n## Comparable Prior Engagement\n_${proposal.comparable.client}_ - ${proposal.comparable.note}`
-      : ``,
-    proposal.caveats.length
-      ? `\n## Caveats\n${proposal.caveats.map((c) => `- ${c}`).join("\n")}`
-      : ``,
-    ``,
-    ``,
-    `## Disclaimer`,
-    `These numbers are illustrative estimates from a public-domain heuristic, not Sigma Prime`,
-    `pricing. Week ranges are derived from a simple LOC bucket map (<1k: 2 wks, 1-5k: 3-4 wks,`,
-    `5-15k: 5-7 wks, >15k: 8-12 wks) with a 1-week reduction if "Expedited" is selected. Real`,
-    `engagements depend on code quality, test coverage, novelty of the design, and whether the`,
-    `team has prior context. Treat this as a conversation starter, not a quote.`,
-    ``,
-    `_Generated by SigmaScope. For TAM portfolio demonstration only._`,
-  ]
-    .filter(Boolean)
-    .join("\n");
 }
