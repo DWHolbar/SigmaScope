@@ -27,43 +27,43 @@ const rows: Row[] = [
   {
     href: "/",
     tab: "Network Pulse",
-    what: "Protocol fluency. Slot and epoch tick from beacon-chain genesis; participation and client diversity surface the primitives Sigma Prime builds.",
-    source: "Genesis math + beaconcha.in + clientdiversity.org snapshot",
+    what: "Live Ethereum slot and epoch from genesis math, plus client diversity and validator participation.",
+    source: "beaconcha.in + genesis math + curated snapshot",
     liveness: "Mixed",
   },
   {
     href: "/blueprint",
     tab: "Blueprint",
-    what: "This page. Explains what each tab does, where its data comes from, and what is honestly live vs curated vs estimated.",
-    source: "Static markdown in this component",
+    what: "This page. Tab map, stack notes, and honest limits on what is live vs estimated.",
+    source: "Static content in this component",
     liveness: "Curated",
   },
   {
     href: "/scoping",
     tab: "Audit Scoping",
-    what: "Client conversation simulator. Maps protocol type to threat model and an industry-anchored engagement estimate.",
-    source: "Hand-coded threat library + LOC-bucket heuristic anchored to public audit firm rates",
+    what: "Five-step intake that emits a threat model, engagement outline, and exportable PDF proposal.",
+    source: "Threat library + LOC heuristic anchored to public audit-firm rates",
     liveness: "Estimated",
   },
   {
     href: "/intel",
     tab: "Vulnerability Intel",
-    what: "Searchable archive of 29 hand-curated exploits (2016 to 2025) plus a live overlay of newer incidents.",
-    source: "Hand-written entries + DefiLlama hacks API (hourly cache)",
+    what: "29 hand-curated exploits with engineer/founder/TAM framings, plus a live DefiLlama overlay.",
+    source: "Hand-written entries + DefiLlama hacks API",
     liveness: "Mixed",
   },
   {
     href: "/github",
     tab: "GitHub Intelligence",
-    what: "Live dashboard of Sigma Prime's open-source footprint at github.com/sigp, with a Lighthouse spotlight.",
-    source: "GitHub REST API (hourly cache, anonymous, with offline snapshot fallback)",
+    what: "Live dashboard of github.com/sigp with org KPIs, a sortable repo grid, and a Lighthouse spotlight.",
+    source: "GitHub REST API with offline snapshot fallback",
     liveness: "Live",
   },
   {
     href: "/studio",
     tab: "Content Studio",
-    what: "Eight content templates (tweet, thread, LinkedIn, newsletter, PR pitch, blog outline, technical FAQ, tool review) that combine a Sigma Prime topic with audience and tone to produce a first draft.",
-    source: "Deterministic template engine over a curated topic library",
+    what: "Eight deterministic templates (tweet, thread, LinkedIn, newsletter, PR, blog, FAQ, review) over 15 topics.",
+    source: "Template engine over a curated topic library",
     liveness: "Curated",
   },
 ];
@@ -97,56 +97,41 @@ export default function BlueprintPage() {
       <Card>
         <CardHeader
           title="Architecture map"
-          hint="One row per tab. Click any row to jump to it."
+          hint="Click any card to jump to the tab."
         />
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 text-[10px] uppercase tracking-widest text-zinc-500">
-                <th className="py-2 pr-4 font-medium">Tab</th>
-                <th className="py-2 pr-4 font-medium">What it demonstrates</th>
-                <th className="py-2 pr-4 font-medium">Data source</th>
-                <th className="py-2 pr-2 font-medium">Liveness</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => {
-                const Icon = tabIcons[row.href] ?? Code;
-                return (
-                  <tr
-                    key={row.href}
-                    className="border-b border-zinc-800/60 last:border-b-0 hover:bg-zinc-900/40"
-                  >
-                    <td className="py-3 pr-4 align-top">
-                      <Link
-                        href={row.href}
-                        className="group flex items-center gap-2 text-zinc-100 hover:text-accent"
-                      >
-                        <Icon size={14} className="shrink-0 text-zinc-500 group-hover:text-accent" />
-                        <span className="font-medium">{row.tab}</span>
-                      </Link>
-                    </td>
-                    <td className="py-3 pr-4 align-top text-[12px] leading-relaxed text-zinc-400">
-                      {row.what}
-                    </td>
-                    <td className="py-3 pr-4 align-top text-[12px] leading-relaxed text-zinc-500">
-                      {row.source}
-                    </td>
-                    <td className="py-3 pr-2 align-top">
-                      <Badge tone={livenessTone[row.liveness]}>{row.liveness}</Badge>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {rows.map((row) => {
+            const Icon = tabIcons[row.href] ?? Code;
+            return (
+              <Link
+                key={row.href}
+                href={row.href}
+                className="card card-hover group flex flex-col gap-2 p-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Icon size={14} className="shrink-0 text-zinc-500 group-hover:text-accent" />
+                    <span className="truncate text-sm font-medium text-zinc-100 group-hover:text-accent">
+                      {row.tab}
+                    </span>
+                  </div>
+                  <Badge tone={livenessTone[row.liveness]}>{row.liveness}</Badge>
+                </div>
+                <p className="line-clamp-2 text-[12px] leading-relaxed text-zinc-400">
+                  {row.what}
+                </p>
+                <p className="mono mt-auto truncate text-[10px] text-zinc-500">
+                  via {row.source}
+                </p>
+              </Link>
+            );
+          })}
         </div>
         <p className="mt-3 text-[11px] leading-relaxed text-zinc-500">
-          <span className="font-medium text-zinc-300">Reading the Liveness column.</span>{" "}
-          <Badge tone="ok">Live</Badge> means a public API drives the number on every load.{" "}
-          <Badge tone="accent">Mixed</Badge> means partial: some fields live, some curated.{" "}
-          <Badge tone="warn">Estimated</Badge> means the number is a transparent heuristic.{" "}
-          <Badge tone="muted">Curated</Badge> means hand-written content.
+          <Badge tone="ok">Live</Badge> public API on every load.{" "}
+          <Badge tone="accent">Mixed</Badge> some live, some curated.{" "}
+          <Badge tone="warn">Estimated</Badge> transparent heuristic.{" "}
+          <Badge tone="muted">Curated</Badge> hand-written content.
         </p>
       </Card>
 
