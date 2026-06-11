@@ -10,6 +10,7 @@ import {
   Github,
   PenTool,
 } from "lucide-react";
+import { NotificationBell } from "./NotificationBell";
 
 const links = [
   { href: "/", label: "Pulse", icon: Activity },
@@ -38,25 +39,28 @@ export function Nav() {
           </span>
         </Link>
 
-        <nav className="scroll-hide flex items-center gap-0.5 overflow-x-auto">
-          {links.map(({ href, label, icon: Icon }) => {
-            const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`group flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition lg:gap-2 lg:px-3 ${
-                  active
-                    ? "bg-accent/10 text-accent"
-                    : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
-                }`}
-              >
-                <Icon size={14} className="shrink-0" />
-                <span className="hidden md:inline">{label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+        <div className="flex min-w-0 items-center gap-2">
+          <nav className="scroll-hide flex items-center gap-0.5 overflow-x-auto">
+            {links.map(({ href, label, icon: Icon }) => {
+              const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`group flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition lg:gap-2 lg:px-3 ${
+                    active
+                      ? "bg-accent/10 text-accent"
+                      : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+                  }`}
+                >
+                  <Icon size={14} className="shrink-0" />
+                  <span className="hidden md:inline">{label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+          <NotificationBell />
+        </div>
       </div>
     </header>
   );
