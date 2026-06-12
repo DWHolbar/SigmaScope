@@ -1,6 +1,13 @@
 import curated from "./data/vulnerabilities.json";
+import categoryAnalyses from "./data/category-analyses.json";
 
 export type CuratedHack = (typeof curated)[number];
+
+export type CategoryAnalysis = {
+  engineer: string;
+  founder: string;
+  sigmaPrime: string;
+};
 
 export type LiveHack = {
   id: string;
@@ -13,7 +20,14 @@ export type LiveHack = {
   oneLiner: string;
   source: "live" | "curated";
   link?: string;
+  analysis: CategoryAnalysis;
 };
+
+const CATEGORY_ANALYSES = categoryAnalyses as Record<string, CategoryAnalysis>;
+
+function analysisFor(category: string): CategoryAnalysis {
+  return CATEGORY_ANALYSES[category] ?? CATEGORY_ANALYSES["Other"];
+}
 
 export type HackFeed = {
   curated: CuratedHack[];
@@ -34,19 +48,32 @@ function severityFromAmount(usd: number): LiveHack["severity"] {
 function classifyTechnique(t: unknown): string {
   if (typeof t !== "string") return "Other";
   const s = t.toLowerCase();
-  if (s.includes("private key") || s.includes("key compromise") || s.includes("compromised key"))
+  if (s.includes("private key") || s.includes("key compromise") || s.includes("compromised key") || s.includes("multisig") || s.includes("hot wallet") || s.includes("cold wallet"))
     return "Key Compromise";
   if (s.includes("flash")) return "Flash Loan";
-  if (s.includes("oracle")) return "Oracle Manipulation";
+  if (s.includes("oracle") || s.includes("price manipulation")) return "Oracle Manipulation";
   if (s.includes("reentr")) return "Reentrancy";
-  if (s.includes("bridge")) return "Bridge";
-  if (s.includes("frontend") || s.includes("phishing") || s.includes("supply chain"))
+  if (s.includes("bridge") || s.includes("cross-chain") || s.includes("crosschain"))
+    return "Bridge";
+  if (s.includes("frontend") || s.includes("phishing") || s.includes("supply chain") || s.includes("dns"))
     return "Frontend / Supply Chain";
-  if (s.includes("access") || s.includes("authorization") || s.includes("admin"))
+  if (s.includes("access") || s.includes("authorization") || s.includes("admin") || s.includes("mint") || s.includes("fake lp") || s.includes("lp mint"))
     return "Access Control";
-  if (s.includes("governance")) return "Governance";
-  if (s.includes("rug")) return "Rug Pull";
+  if (s.includes("governance") || s.includes("voting")) return "Governance";
+  if (s.includes("rug") || s.includes("exit scam")) return "Rug Pull";
+  if (s.includes("invariant") || s.includes("logic") || s.includes("calculation") || s.includes("rounding"))
+    return "Invariant";
   return t;
+}
+
+// DefiLlama's amount field is ambiguous: usually millions of USD, occasionally raw USD,
+// occasionally garbage. Treat anything >= 100_000 as raw USD (a million-millions would be a
+// trillion-dollar hack, which has never happened); treat smaller values as millions.
+// Finally, cap at $10B because no single incident in history has crossed that line.
+function normaliseAmount(raw: unknown): number {
+  if (typeof raw !== "number" || !Number.isFinite(raw) || raw <= 0) return 0;
+  const usd = raw >= 100_000 ? raw : raw * 1_000_000;
+  return Math.min(usd, 10_000_000_000);
 }
 
 function slugify(s: string): string {
@@ -90,7 +117,7 @@ export async function fetchLiveHacks(): Promise<{
             : typeof row?.date === "string"
               ? Date.parse(row.date)
               : NaN;
-        const amount = typeof row?.amount === "number" ? row.amount * 1_000_000 : 0;
+        const amount = normaliseAmount(row?.amount);
         if (!name || !Number.isFinite(ts)) return null;
         const date = new Date(ts);
         const year = date.getUTCFullYear();
@@ -111,6 +138,7 @@ export async function fetchLiveHacks(): Promise<{
               : "Recorded by DefiLlama; click source link for details.",
           source: "live",
           link: typeof row?.link === "string" ? row.link : undefined,
+          analysis: analysisFor(category),
         };
       })
       .filter((h): h is LiveHack => h !== null)
