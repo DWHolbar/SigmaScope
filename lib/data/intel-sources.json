@@ -1,0 +1,23 @@
+[
+  {
+    "name": "DefiLlama Hacks",
+    "url": "https://defillama.com/hacks",
+    "kind": "live-api",
+    "refresh": "hourly",
+    "blurb": "Structured JSON feed of recorded crypto hacks with amount, technique, and chain. Drives the live overlay on this tab."
+  },
+  {
+    "name": "QuillAudits Web3 Hacks Database",
+    "url": "https://www.quillaudits.com/web3-hacks-database",
+    "kind": "reference",
+    "refresh": "quarterly",
+    "blurb": "QuillAudits' curated database with attack-vector classification. Used as a cross-reference when promoting an incident to a curated entry."
+  },
+  {
+    "name": "BlockSec Security Incident",
+    "url": "https://blocksec.com/security-incident",
+    "kind": "reference",
+    "refresh": "quarterly",
+    "blurb": "BlockSec's incident page with deep on-chain forensics. Used to validate technique classification on bridge and key-compromise events."
+  }
+]

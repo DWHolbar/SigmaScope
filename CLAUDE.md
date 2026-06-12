@@ -120,6 +120,59 @@ whole point is freshness, so it's the most rate-limit-sensitive endpoint.
 
 ---
 
+## Vulnerability Intel sources and curation cadence
+
+The Vulnerability Intel tab draws on three referenced databases. Only one of them has a
+documented public API; the other two are consulted by hand. The curated archive in
+`lib/data/vulnerabilities.json` is the synthesis of all three plus primary post-mortems.
+
+| Source | Role | API? | Refresh |
+|---|---|---|---|
+| [DefiLlama Hacks](https://defillama.com/hacks) | Live overlay (rapid-summary fields) | Yes, `api.llama.fi/hacks` | Hourly automatic via `/api/hacks` |
+| [QuillAudits Web3 Hacks Database](https://www.quillaudits.com/web3-hacks-database) | Cross-reference for attack-vector classification | No public API | Quarterly manual sweep |
+| [BlockSec Security Incident](https://blocksec.com/security-incident) | Cross-reference for on-chain forensics, especially bridge / key-compromise | No free structured API | Quarterly manual sweep |
+
+The structured catalogue lives in `lib/data/intel-sources.json` and drives the "Referenced
+databases" card at the bottom of `/intel`.
+
+### `references` field on curated entries
+
+Every entry in `lib/data/vulnerabilities.json` carries an optional `references: string[]`
+array naming which databases and post-mortems were consulted. It renders in the entry's
+drawer as a "Cross-checked with" row of muted badges. Suggested defaults when adding a new
+entry:
+
+- DefiLlama for almost any incident from 2018 onwards.
+- QuillAudits for marquee DeFi, bridge, and wallet incidents.
+- BlockSec for bridges and key-compromise events.
+- The primary post-mortem (project blog, Trail of Bits write-up, official disclosure) trumps
+  everything when available. Name it directly, e.g. `"Radiant Capital post-mortem"` or
+  `"Vyper compiler advisory"`.
+
+### Curation cadence
+
+- **DefiLlama:** automatic, hourly via `app/api/hacks/route.ts`. No manual work needed.
+- **QuillAudits and BlockSec:** quarterly sweep. Walk each database, note any incidents not
+  already in `vulnerabilities.json`, and add them as new curated entries with the full
+  engineer / founder / TAM framings.
+- **Out-of-cycle pass:** any incident with `lossUsd >= 10_000_000` warrants an immediate
+  curated entry, regardless of cadence. The live DefiLlama overlay will display it
+  meanwhile.
+
+### Promoting a live entry to a curated entry
+
+When DefiLlama records an incident that deserves the full three-framing narrative:
+
+1. Add a new entry to `lib/data/vulnerabilities.json` with the same `name` field as the
+   DefiLlama entry. The deduplication in `lib/hacks.ts:99` matches on lowercased name, so
+   the curated record automatically wins over the live one.
+2. Include the full `engineerExplain`, `founderImpact`, `sigmaPrimeMitigation`, and a
+   `references` array citing DefiLlama plus any other databases checked.
+3. No code changes are needed; the tab picks the new entry up on the next build (or
+   immediately in dev).
+
+---
+
 ## Common tasks
 
 ### Add a new historical exploit to the Intel archive

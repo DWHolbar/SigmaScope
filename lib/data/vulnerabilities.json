@@ -10,7 +10,11 @@
     "oneLiner": "Recursive call drained the DAO before its internal balance updated.",
     "engineerExplain": "splitDAO() sent ether before zeroing the caller's balance. A fallback function re-entered splitDAO() repeatedly, withdrawing far more than the recorded balance. Checks-Effects-Interactions inverted.",
     "founderImpact": "$60M drained; forced the hard fork that produced Ethereum Classic. Set the precedent that 'code is law' has a social override at large enough blast radius.",
-    "sigmaPrimeMitigation": "Manual review flags every external call that precedes a state mutation, and Slither/Foundry invariant tests assert balances are decremented before transfer. A scoping conversation here surfaces ReentrancyGuard placement and pull-over-push withdrawal patterns."
+    "sigmaPrimeMitigation": "Manual review flags every external call that precedes a state mutation, and Slither/Foundry invariant tests assert balances are decremented before transfer. A scoping conversation here surfaces ReentrancyGuard placement and pull-over-push withdrawal patterns.",
+    "references": [
+      "rekt.news",
+      "Phil Daian post-mortem (Hacking Distributed)"
+    ]
   },
   {
     "id": "parity-2017",
@@ -23,7 +27,11 @@
     "oneLiner": "Unprotected initWallet() let a user become the library owner, then selfdestruct it.",
     "engineerExplain": "The shared wallet library exposed initWallet() with no initialization guard. A user called it, took ownership, then issued kill(), bricking every wallet that delegated to that library.",
     "founderImpact": "Roughly 513k ETH permanently frozen across hundreds of treasuries. Demonstrated that 'shared library' is itself a trust assumption.",
-    "sigmaPrimeMitigation": "Every initializer must be guarded (constructor-only, or initializer modifier with a one-shot bool). Audits explicitly enumerate library/proxy ownership paths and verify that selfdestruct surfaces are either removed or behind multi-sig timelocks."
+    "sigmaPrimeMitigation": "Every initializer must be guarded (constructor-only, or initializer modifier with a one-shot bool). Audits explicitly enumerate library/proxy ownership paths and verify that selfdestruct surfaces are either removed or behind multi-sig timelocks.",
+    "references": [
+      "rekt.news",
+      "Parity Technologies post-mortem"
+    ]
   },
   {
     "id": "bzx-2020",
@@ -36,7 +44,12 @@
     "oneLiner": "Atomic loan, manipulated price, drained margin pool, all in one transaction.",
     "engineerExplain": "Attacker borrowed via dYdX flash loan, manipulated the Uniswap v1 sUSD/ETH spot price (used as bZx's oracle), opened a short on the distorted price, and repaid the loan, pocketing the spread.",
     "founderImpact": "First high-profile flash loan exploit. Changed how every DeFi protocol thinks about composability and oracle sourcing.",
-    "sigmaPrimeMitigation": "We red-team oracle paths: spot DEX prices are never trusted for collateralization. Threat model surfaces TWAP windows, Chainlink feed deviation thresholds, and per-block trade caps."
+    "sigmaPrimeMitigation": "We red-team oracle paths: spot DEX prices are never trusted for collateralization. Threat model surfaces TWAP windows, Chainlink feed deviation thresholds, and per-block trade caps.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "rekt.news"
+    ]
   },
   {
     "id": "polynetwork-2021",
@@ -49,7 +62,13 @@
     "oneLiner": "Cross-chain keeper contract called by attacker via crafted parameters, replacing the trusted keeper key.",
     "engineerExplain": "EthCrossChainManager allowed arbitrary cross-chain calls into EthCrossChainData. Attacker crafted a message that invoked putCurEpochConPubKeyBytes, replacing the keeper set with their own address. All subsequent unlock calls passed signature checks.",
     "founderImpact": "$611M moved across three chains, the largest theft in DeFi history at the time. Attacker returned all funds within days, citing it as a 'whitehat' demonstration.",
-    "sigmaPrimeMitigation": "Bridge audits explicitly enumerate every privileged setter reachable via the message-routing surface. We assert that no caller, regardless of origin chain, can rotate signing-key state without a separate timelocked path."
+    "sigmaPrimeMitigation": "Bridge audits explicitly enumerate every privileged setter reachable via the message-routing surface. We assert that no caller, regardless of origin chain, can rotate signing-key state without a separate timelocked path.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec",
+      "rekt.news"
+    ]
   },
   {
     "id": "cream-2021",
@@ -62,7 +81,12 @@
     "oneLiner": "yUSD price oracle returned a doubled value because of a getPricePerFullShare quirk.",
     "engineerExplain": "Cream priced yUSD by reading Yearn's price-per-share, which was inflatable by donating tokens directly to the vault. Attacker inflated the share price, borrowed against it, and walked.",
     "founderImpact": "Roughly $130M across multiple Cream pools. Killed the Cream brand and reframed donation/share-price attacks as a first-class threat.",
-    "sigmaPrimeMitigation": "Review of every external price source maps the trust path end-to-end. We flag vaults whose share price is mutable by an unsanctioned transfer and require either a virtual offset (ERC-4626 style) or a hardcoded floor."
+    "sigmaPrimeMitigation": "Review of every external price source maps the trust path end-to-end. We flag vaults whose share price is mutable by an unsanctioned transfer and require either a virtual offset (ERC-4626 style) or a hardcoded floor.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "rekt.news"
+    ]
   },
   {
     "id": "badgerdao-2021",
@@ -75,7 +99,12 @@
     "oneLiner": "Compromised Cloudflare account injected malicious approvals into the dApp UI.",
     "engineerExplain": "Not a contract bug. An attacker added a Cloudflare API key, injected JS that rewrote approve() targets in the dApp, and harvested signed approvals from users who connected wallets.",
     "founderImpact": "$120M lost; reminded the space that the smart-contract perimeter ends at the user's browser. Web2 hygiene is in scope.",
-    "sigmaPrimeMitigation": "Engagement scoping asks about CSP headers, subresource integrity, DNS/CDN account 2FA, and signer-display patterns (Permit2, blind-signing warnings). The contracts are necessary but not sufficient."
+    "sigmaPrimeMitigation": "Engagement scoping asks about CSP headers, subresource integrity, DNS/CDN account 2FA, and signer-display patterns (Permit2, blind-signing warnings). The contracts are necessary but not sufficient.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "rekt.news"
+    ]
   },
   {
     "id": "wormhole-2022",
@@ -88,7 +117,13 @@
     "oneLiner": "Solana signature verifier accepted a forged guardian set due to a missing instruction check.",
     "engineerExplain": "verify_signatures used a deprecated Solana sysvar without verifying the instruction it was being called from. Attacker spoofed a guardian signature set and minted 120k wETH on Solana with no Ethereum backing.",
     "founderImpact": "$326M minted out of thin air. Jump Crypto backfilled it within a day, but the incident set the bar for what 'bridge audit' has to cover.",
-    "sigmaPrimeMitigation": "Cross-VM audits get a cryptographer added to the team. We assert every signature-verification path, including the host-VM sysvars and instruction-introspection edges, and require fuzzing of the guardian-set rotation messages."
+    "sigmaPrimeMitigation": "Cross-VM audits get a cryptographer added to the team. We assert every signature-verification path, including the host-VM sysvars and instruction-introspection edges, and require fuzzing of the guardian-set rotation messages.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec",
+      "Jump Crypto post-mortem"
+    ]
   },
   {
     "id": "ronin-2022",
@@ -101,7 +136,13 @@
     "oneLiner": "5-of-9 validator quorum collapsed to 5-of-5 after social-engineered key compromise.",
     "engineerExplain": "Attacker compromised 4 Sky Mavis validators directly and gained a delegated 5th via a stale RPC allowlist. With 5 keys, they signed two withdrawal transactions and emptied the bridge.",
     "founderImpact": "$624M, attributed to Lazarus. Triggered the rethink of how m-of-n bridge guardians are operated and rotated.",
-    "sigmaPrimeMitigation": "Bridge engagements include key-custody and rotation review, not just contract review. We push for hardware-isolated signers, explicit timelock on validator-set changes, and revocation of all delegated RPC trust after engagement testing."
+    "sigmaPrimeMitigation": "Bridge engagements include key-custody and rotation review, not just contract review. We push for hardware-isolated signers, explicit timelock on validator-set changes, and revocation of all delegated RPC trust after engagement testing.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec",
+      "Sky Mavis post-mortem"
+    ]
   },
   {
     "id": "beanstalk-2022",
@@ -114,7 +155,12 @@
     "oneLiner": "Flash-loaned governance tokens to pass a malicious BIP in the same block it was proposed.",
     "engineerExplain": "Beanstalk allowed any holder above a threshold to commit a Beanstalk Improvement Proposal. Attacker flash-loaned enough Stalk and Seeds, proposed a BIP that drained the protocol's reserves to an attacker address, and the same block met the quorum needed to execute.",
     "founderImpact": "$182M drained. Demonstrated that on-chain governance without a voting delay is just a permissionless rug pull.",
-    "sigmaPrimeMitigation": "Governance review insists on a non-zero voting window and a timelock between proposal acceptance and execution. We flag any path where flash-loaned voting weight can be both acquired and used inside one transaction."
+    "sigmaPrimeMitigation": "Governance review insists on a non-zero voting window and a timelock between proposal acceptance and execution. We flag any path where flash-loaned voting weight can be both acquired and used inside one transaction.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "rekt.news"
+    ]
   },
   {
     "id": "nomad-2022",
@@ -127,7 +173,13 @@
     "oneLiner": "Upgrade set the trusted root to 0x00, every message became 'valid'.",
     "engineerExplain": "A routine Replica upgrade initialized the trusted root to zero. Because committedRoot[0] = true, any message whose Merkle proof hashed to zero was accepted. Within hours, a copy-paste exploit drained the bridge.",
     "founderImpact": "$190M lost in a chaotic, public, copy-paste-able fashion, the first 'decentralized' hack where hundreds of EOAs participated.",
-    "sigmaPrimeMitigation": "Upgrade reviews are a distinct deliverable: initial storage layout deltas, default-value invariants, and a forced testnet replay of every privileged init path before the mainnet tx is signed."
+    "sigmaPrimeMitigation": "Upgrade reviews are a distinct deliverable: initial storage layout deltas, default-value invariants, and a forced testnet replay of every privileged init path before the mainnet tx is signed.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec",
+      "rekt.news"
+    ]
   },
   {
     "id": "mango-2022",
@@ -140,7 +192,13 @@
     "oneLiner": "Pumped MNGO spot price on thin liquidity, borrowed against the inflated collateral, drained treasury.",
     "engineerExplain": "Attacker self-funded both sides of a perp trade, used a $5M position to push MNGO from $0.03 to $0.91 on the sole reference market, then borrowed every asset in the protocol against the now-inflated MNGO collateral. Repayment was never required because the protocol was insolvent.",
     "founderImpact": "$114M. Avraham Eisenberg, the attacker, claimed it as 'highly profitable trading strategy' and was later convicted of fraud and market manipulation in US federal court.",
-    "sigmaPrimeMitigation": "Threat model requires a sanity bound on any asset usable as collateral: reference-market depth, deviation thresholds, and circuit-breakers on price moves outside historical bands."
+    "sigmaPrimeMitigation": "Threat model requires a sanity bound on any asset usable as collateral: reference-market depth, deviation thresholds, and circuit-breakers on price moves outside historical bands.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec",
+      "rekt.news"
+    ]
   },
   {
     "id": "ftx-2022",
@@ -153,7 +211,12 @@
     "oneLiner": "Hot-wallet keys exfiltrated during the FTX bankruptcy filing, attributed by DoJ to a former employee.",
     "engineerExplain": "Not a contract exploit. Hot wallet signing infrastructure was accessed outside of normal operational controls during a chaotic 24-hour window. Funds were routed through cross-chain bridges and mixers within hours.",
     "founderImpact": "$477M lost on top of an already $8B insolvency. US DoJ later charged a former engineer for SIM-swapping an executive and signing unauthorized withdrawals.",
-    "sigmaPrimeMitigation": "Custody review covers the operational layer: who can co-sign, what triggers a rotation, how break-glass procedures are gated. Smart-contract audit alone never prevents this class."
+    "sigmaPrimeMitigation": "Custody review covers the operational layer: who can co-sign, what triggers a rotation, how break-glass procedures are gated. Smart-contract audit alone never prevents this class.",
+    "references": [
+      "DefiLlama",
+      "Chainalysis report",
+      "US DoJ filings"
+    ]
   },
   {
     "id": "euler-2023",
@@ -166,7 +229,13 @@
     "oneLiner": "donateToReserves() let an attacker put themselves underwater and self-liquidate at a discount.",
     "engineerExplain": "donateToReserves bypassed the standard health check. Attacker leveraged into a position, donated enough to flip themselves underwater without triggering a revert, then captured the liquidation bonus as the same address.",
     "founderImpact": "$197M (returned in full, rare). Validated that protocol-level invariants matter more than per-function correctness.",
-    "sigmaPrimeMitigation": "Invariant-based review (Echidna / Foundry). We don't just check 'this function reverts on bad input', we assert 'no sequence of legal calls leaves an unhealthy account un-liquidatable by anyone except itself profitably.'"
+    "sigmaPrimeMitigation": "Invariant-based review (Echidna / Foundry). We don't just check 'this function reverts on bad input', we assert 'no sequence of legal calls leaves an unhealthy account un-liquidatable by anyone except itself profitably.'",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec",
+      "Euler post-mortem"
+    ]
   },
   {
     "id": "atomicwallet-2023",
@@ -179,7 +248,12 @@
     "oneLiner": "Mass drain across thousands of self-custody users, root cause never fully disclosed.",
     "engineerExplain": "Non-custodial wallet shipped with weak seed-generation entropy on certain platforms, or a compromised dependency in the signing pipeline. Public forensics by ZachXBT pointed to Lazarus and a wide spread of victims (~5,500 addresses) consistent with bulk seed harvesting rather than per-user phishing.",
     "founderImpact": "$100M+ from ordinary users. Atomic Wallet's official response was minimal, eroding trust in unaudited consumer wallet software.",
-    "sigmaPrimeMitigation": "Wallet audits assess entropy sources, dependency supply chain, and seed-storage encryption-at-rest. We require third-party reproducible builds for any binary distributed to end users."
+    "sigmaPrimeMitigation": "Wallet audits assess entropy sources, dependency supply chain, and seed-storage encryption-at-rest. We require third-party reproducible builds for any binary distributed to end users.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "ZachXBT investigation"
+    ]
   },
   {
     "id": "multichain-2023",
@@ -192,7 +266,12 @@
     "oneLiner": "MPC keys held centrally by the team became inaccessible or compromised after CEO's arrest.",
     "engineerExplain": "Multichain marketed itself as MPC-secured cross-chain, but key shares were effectively controlled by a small internal team, with CEO Zhaojun holding critical material on personal devices. When Chinese authorities detained him, funds began moving from bridge contracts to unknown addresses.",
     "founderImpact": "$126M+ drained, all Multichain bridges shut down, every wrapped asset depegged. The 'decentralized MPC' story turned out to be a single point of failure.",
-    "sigmaPrimeMitigation": "Custody review treats 'MPC' as a marketing term until proven otherwise. We require demonstrable threshold operation: live proof-of-key-share-rotation, geographic key-holder distribution, and a published incident-response runbook."
+    "sigmaPrimeMitigation": "Custody review treats 'MPC' as a marketing term until proven otherwise. We require demonstrable threshold operation: live proof-of-key-share-rotation, geographic key-holder distribution, and a published incident-response runbook.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec"
+    ]
   },
   {
     "id": "curve-2023",
@@ -205,7 +284,13 @@
     "oneLiner": "Vyper 0.2.15 / 0.2.16 / 0.3.0 shipped a malfunctioning @nonreentrant decorator.",
     "engineerExplain": "Three Vyper compiler versions emitted reentrancy-lock bytecode that allocated the lock to the same storage slot as a regular state variable, silently disabling protection. Curve pools (alETH/ETH, msETH/ETH, pETH/ETH, CRV/ETH) compiled with those versions were reentered.",
     "founderImpact": "$73M across several stable/LSD pools. Demonstrated that compiler bugs are an attack surface even when contract code is otherwise correct.",
-    "sigmaPrimeMitigation": "Engagement scope includes compiler-version pinning, reproducible builds, and explicit auditor sign-off on which compiler the deployed bytecode came from. We diff deployed bytecode against a fresh build from source as a deliverable."
+    "sigmaPrimeMitigation": "Engagement scope includes compiler-version pinning, reproducible builds, and explicit auditor sign-off on which compiler the deployed bytecode came from. We diff deployed bytecode against a fresh build from source as a deliverable.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec",
+      "Vyper compiler advisory"
+    ]
   },
   {
     "id": "mixin-2023",
@@ -218,7 +303,12 @@
     "oneLiner": "Cloud-provider database compromise leaked key material outside the contract layer entirely.",
     "engineerExplain": "Mixin held user balance state in a centralized off-chain database hosted with a third-party cloud provider. The provider was breached, exposing private-key material used to authorize on-chain withdrawals.",
     "founderImpact": "$200M lost, ~50% offered back to users via a token-based recovery plan. Reminded the industry that 'decentralized' frontends often have very centralized infrastructure roots.",
-    "sigmaPrimeMitigation": "Infrastructure review covers the full key-derivation path: where seeds come from, where they're stored at rest, who has access. A clean smart-contract audit means nothing if signing keys live in an unaudited cloud bucket."
+    "sigmaPrimeMitigation": "Infrastructure review covers the full key-derivation path: where seeds come from, where they're stored at rest, who has access. A clean smart-contract audit means nothing if signing keys live in an unaudited cloud bucket.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "Mixin team disclosure"
+    ]
   },
   {
     "id": "htx-heco-2023",
@@ -231,7 +321,12 @@
     "oneLiner": "Both the HTX exchange hot wallet and the Heco-Ethereum bridge multisig drained within hours of each other.",
     "engineerExplain": "Coordinated compromise of signing keys controlling both the HTX exchange treasury and the Heco bridge validator set. The proximity in time suggests shared operational infrastructure between exchange and bridge, not coincidence.",
     "founderImpact": "$113M+ combined. Justin Sun publicly committed to user reimbursement, but the event highlighted ongoing operational-security gaps in exchange-affiliated bridges.",
-    "sigmaPrimeMitigation": "We insist on cryptographic and operational separation between exchange treasury keys and bridge guardian keys. Shared infrastructure between revenue-generating and custody-critical systems is itself a finding."
+    "sigmaPrimeMitigation": "We insist on cryptographic and operational separation between exchange treasury keys and bridge guardian keys. Shared infrastructure between revenue-generating and custody-critical systems is itself a finding.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec"
+    ]
   },
   {
     "id": "kyber-2023",
@@ -244,7 +339,13 @@
     "oneLiner": "Tick-rounding bug in concentrated liquidity let attacker double-count liquidity at the same tick.",
     "engineerExplain": "KyberSwap Elastic (a Uniswap v3-style concentrated liquidity AMM) had an off-by-one in tick crossing. By carefully placing liquidity at a tick that the swap would never reach, then triggering a near-empty swap, the attacker caused the same liquidity to be counted twice in the active range, enabling near-zero-cost extraction.",
     "founderImpact": "$46M across multiple chains. Effectively ended Kyber Network as a standalone DEX.",
-    "sigmaPrimeMitigation": "Concentrated-liquidity audits include differential fuzzing against the reference Uniswap v3 invariants. We assert that for every legal sequence of mint/swap/burn, sum-of-liquidity-in-range equals sum-of-tick-deltas crossed."
+    "sigmaPrimeMitigation": "Concentrated-liquidity audits include differential fuzzing against the reference Uniswap v3 invariants. We assert that for every legal sequence of mint/swap/burn, sum-of-liquidity-in-range equals sum-of-tick-deltas crossed.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec",
+      "Kyber post-mortem"
+    ]
   },
   {
     "id": "orbit-2024",
@@ -257,7 +358,12 @@
     "oneLiner": "7-of-10 multisig signers compromised on New Year's Eve, drained the bridge across multiple assets.",
     "engineerExplain": "Bridge custody relied on a 7-of-10 multisig. Attacker (suspected Lazarus) obtained 7 signing keys, executed withdrawal transactions for ETH, DAI, USDT, USDC, and WBTC in rapid succession. Forensics indicated targeted phishing or supply-chain access to signer endpoints.",
     "founderImpact": "$82M lost. Bridge ceased operating in its prior form. Reinforced that m-of-n with operational reuse of keys is brittle.",
-    "sigmaPrimeMitigation": "Multisig custody review covers per-signer device hardening, geographic distribution, and rotation cadence. We require break-glass procedures that can pause withdrawals on m-of-n minus k signature loss without further key changes."
+    "sigmaPrimeMitigation": "Multisig custody review covers per-signer device hardening, geographic distribution, and rotation cadence. We require break-glass procedures that can pause withdrawals on m-of-n minus k signature loss without further key changes.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec"
+    ]
   },
   {
     "id": "playdapp-2024",
@@ -270,7 +376,12 @@
     "oneLiner": "Compromised minter key let attacker mint 1.79B PLA tokens out of thin air.",
     "engineerExplain": "PLA token contract had a minter role behind a single externally-owned account. That EOA was compromised. Attacker minted 200M PLA, then a further 1.59B, then sold into market liquidity.",
     "founderImpact": "$290M in theoretical loss before market liquidity dried up. PlayDapp launched a new PDA token at a fixed ratio to compensate legitimate holders.",
-    "sigmaPrimeMitigation": "Tokenomics review flags any mint authority that is not behind a timelock with a sane per-period mint cap. EOA-owned minter roles are an immediate critical finding."
+    "sigmaPrimeMitigation": "Tokenomics review flags any mint authority that is not behind a timelock with a sane per-period mint cap. EOA-owned minter roles are an immediate critical finding.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec"
+    ]
   },
   {
     "id": "munchables-2024",
@@ -283,7 +394,12 @@
     "oneLiner": "A developer hired by the team (later linked to Lazarus) implanted a backdoor upgrade path before launch.",
     "engineerExplain": "The malicious developer deployed contract logic that allowed re-initialization of the owner via a non-obvious upgrade call. Months later, that developer's account triggered the upgrade and drained 17,400 ETH.",
     "founderImpact": "$62M, fully returned within 48 hours after public pressure on the developer. Validated that hiring-pipeline security is part of the threat model.",
-    "sigmaPrimeMitigation": "Engagement scoping asks about contributor identity verification, code-attribution provenance, and whether any contract was authored by a contributor with less than 90 days of public on-chain history. Privileged-init paths are audited regardless of contributor reputation."
+    "sigmaPrimeMitigation": "Engagement scoping asks about contributor identity verification, code-attribution provenance, and whether any contract was authored by a contributor with less than 90 days of public on-chain history. Privileged-init paths are audited regardless of contributor reputation.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "Munchables disclosure"
+    ]
   },
   {
     "id": "hedgey-2024",
@@ -296,7 +412,13 @@
     "oneLiner": "Missing approval check on createLockedCampaign let attackers fund campaigns from arbitrary balances.",
     "engineerExplain": "createLockedCampaign assumed the caller had approved the token for transfer, but did not actually transferFrom the caller. Combined with a flash loan, attackers spawned vesting campaigns funded by random victims' approvals, then unlocked the funds to themselves.",
     "founderImpact": "$44.7M across Ethereum and Arbitrum deployments. Hedgey paused contracts and rebuilt the affected modules.",
-    "sigmaPrimeMitigation": "Code review explicitly enumerates every function that transfers tokens on behalf of users: who initiated the transfer, what approval is being consumed, and whether the recipient can be controlled by the caller."
+    "sigmaPrimeMitigation": "Code review explicitly enumerates every function that transfers tokens on behalf of users: who initiated the transfer, what approval is being consumed, and whether the recipient can be controlled by the caller.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec",
+      "Hedgey post-mortem"
+    ]
   },
   {
     "id": "dmm-2024",
@@ -309,7 +431,12 @@
     "oneLiner": "Japanese exchange lost 4,502 BTC after signing-infrastructure compromise.",
     "engineerExplain": "Public technical details remain limited (Japanese regulatory disclosure framework differs from US). The pattern, consistent with prior Lazarus operations, is interception of pre-signed transactions or compromise of an HSM operator workstation.",
     "founderImpact": "$305M. DMM Bitcoin shut down and migrated user accounts to SBI VC Trade in late 2024.",
-    "sigmaPrimeMitigation": "Exchange custody assessments cover the full transaction-signing path, including HSM operator workstations, the air-gap between cold and warm tiers, and the timing controls between signature generation and broadcast."
+    "sigmaPrimeMitigation": "Exchange custody assessments cover the full transaction-signing path, including HSM operator workstations, the air-gap between cold and warm tiers, and the timing controls between signature generation and broadcast.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "DMM Bitcoin disclosure"
+    ]
   },
   {
     "id": "wazirx-2024",
@@ -322,7 +449,13 @@
     "oneLiner": "Safe multisig + Liminal custodian setup compromised, attributed to Lazarus.",
     "engineerExplain": "WazirX used a 4-of-6 Safe multisig where Liminal Custody operated as one of the signers and as the transaction-builder UI. Public forensics indicates the malicious payload was injected at the Liminal UI layer: signers saw legitimate transactions and signed a different payload that delegatecalled an attacker-implementation. Same root-cause class as the Bybit 2025 attack.",
     "founderImpact": "$230M, ~45% of WazirX's reserves. Triggered prolonged user-fund freeze and restructuring proceedings in Singapore courts.",
-    "sigmaPrimeMitigation": "Multisig signing-flow review requires hardware-displayed full calldata, independent of the host UI. We mandate per-signer use of a separate transaction-builder and a hash-comparison step before any production signature."
+    "sigmaPrimeMitigation": "Multisig signing-flow review requires hardware-displayed full calldata, independent of the host UI. We mandate per-signer use of a separate transaction-builder and a hash-comparison step before any production signature.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec",
+      "WazirX statement"
+    ]
   },
   {
     "id": "indodax-2024",
@@ -335,7 +468,12 @@
     "oneLiner": "Indonesian exchange hot-wallet drained across Ethereum, BSC, Tron, and Polygon.",
     "engineerExplain": "Coordinated multi-chain drain consistent with a compromised key-management server controlling several hot-wallet daemons. Indodax suspended withdrawals within hours and absorbed the loss from operational reserves.",
     "founderImpact": "$22M. Smaller than DMM or WazirX but in the same Q3 2024 wave of exchange hot-wallet compromises.",
-    "sigmaPrimeMitigation": "Custody assessments require that the same compromise vector cannot drain multiple chains within one transaction window. Per-chain signing isolation and per-chain rate limits are deliverables."
+    "sigmaPrimeMitigation": "Custody assessments require that the same compromise vector cannot drain multiple chains within one transaction window. Per-chain signing isolation and per-chain rate limits are deliverables.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec"
+    ]
   },
   {
     "id": "penpie-2024",
@@ -348,7 +486,13 @@
     "oneLiner": "Reentrancy through registerPenpiePool let attacker register a fake market and harvest rewards.",
     "engineerExplain": "PendleStaking.depositMarket() called an external pool's transferFrom before the staking-state update, allowing reentrancy into registerPenpiePool with a malicious pool address. The attacker then claimed rewards as if they controlled a legitimate Pendle market.",
     "founderImpact": "$27M drained from Penpie pools on Ethereum. Pendle itself was unaffected.",
-    "sigmaPrimeMitigation": "Reentrancy audits do not stop at 'is there a guard'. We trace every external call to a token contract that the caller can configure, since attacker-controlled tokens are reentrancy-on-rails."
+    "sigmaPrimeMitigation": "Reentrancy audits do not stop at 'is there a guard'. We trace every external call to a token contract that the caller can configure, since attacker-controlled tokens are reentrancy-on-rails.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec",
+      "Penpie post-mortem"
+    ]
   },
   {
     "id": "radiant-2024",
@@ -361,7 +505,13 @@
     "oneLiner": "Malicious Safe{Wallet} UI tricked Radiant's multisig signers into approving a delegatecall to an attacker contract.",
     "engineerExplain": "Attackers (attributed to Lazarus) compromised at least three signer devices and injected JavaScript into their view of the Safe transaction builder. Signers saw and approved what looked like routine setMerkleRoot calls; the on-chain payload was a delegatecall that overwrote the proxy's implementation slot.",
     "founderImpact": "$50M drained from Radiant lending pools on Arbitrum and BNB Chain. The protocol's published post-mortem became the canonical reference for 'sign-what-you-see' attacks.",
-    "sigmaPrimeMitigation": "Engagement scope now formally includes a Safe-transaction-signing review: hardware-display verification of full calldata, an independent second-screen hash check, and verification that the Safe implementation slot itself is monitored for unauthorized writes."
+    "sigmaPrimeMitigation": "Engagement scope now formally includes a Safe-transaction-signing review: hardware-display verification of full calldata, an independent second-screen hash check, and verification that the Safe implementation slot itself is monitored for unauthorized writes.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec",
+      "Radiant Capital post-mortem"
+    ]
   },
   {
     "id": "bybit-2025",
@@ -374,6 +524,13 @@
     "oneLiner": "Largest crypto theft in history: Safe{Wallet} UI compromise tricked Bybit cold-wallet signers into delegatecalling an attacker contract.",
     "engineerExplain": "Attackers (US Treasury OFAC attribution: Lazarus) compromised a Safe{Wallet} developer machine and pushed malicious JavaScript that targeted Bybit's specific Safe address. When Bybit's cold-wallet signers reviewed a routine ETH transfer in the UI, the displayed calldata was correct but the signed payload was a delegatecall to a malicious implementation that replaced the proxy logic. 401,346 ETH (~$1.46B at execution) drained in a single transaction.",
     "founderImpact": "$1.46B stolen, the largest crypto theft on record. Bybit remained solvent (Ben Zhou publicly committed to a 1:1 backing within 72 hours via emergency loans) but the event reframed cold-wallet security industry-wide. Same root-cause class as Radiant 2024 and WazirX 2024.",
-    "sigmaPrimeMitigation": "Cold-wallet engagements now treat the signing UI itself as untrusted. Deliverables include: hardware-only calldata display, an air-gapped second-channel hash verifier, monitored alerts on the Safe implementation slot, and an independently-built Safe interface used in parallel for diff-comparison before any signature is broadcast."
+    "sigmaPrimeMitigation": "Cold-wallet engagements now treat the signing UI itself as untrusted. Deliverables include: hardware-only calldata display, an air-gapped second-channel hash verifier, monitored alerts on the Safe implementation slot, and an independently-built Safe interface used in parallel for diff-comparison before any signature is broadcast.",
+    "references": [
+      "DefiLlama",
+      "QuillAudits",
+      "BlockSec",
+      "Bybit post-mortem",
+      "US Treasury OFAC attribution"
+    ]
   }
 ]
